@@ -2,8 +2,8 @@
 #define LINALG_H_
 
 #define LINALG linalg_driver
-#define M 5
-#define N 15
+#define M 3
+#define N 3
 
 struct Matrix
 {

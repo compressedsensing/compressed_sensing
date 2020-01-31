@@ -20,7 +20,6 @@ static void make_sensing_matrix(Matrix *mat)
         for (j = 0; j < N; j++)
         {
             mat->data[i][j] = RANDOM.get_random_number();
-            printf("%.2f\t",mat->data[i][j]);
         }
     }
 }
@@ -52,7 +51,7 @@ static void inner_product(Matrix *mat, Vector *vec, Vector *ret)
 /**
  * Helper function for printing sensing matrices
  */
-void print_sensing_matrix(Matrix *mat)
+static void print_sensing_matrix(Matrix *mat)
 {
     int i, j;
 
@@ -60,7 +59,7 @@ void print_sensing_matrix(Matrix *mat)
     {
         for (j = 0; j < N; j++)
         {
-            printf("%.2f\t", mat->data[i][j]);
+            printf("%016u\t", mat->data[i][j]);
         }
         printf("\n");
     }
@@ -69,7 +68,7 @@ void print_sensing_matrix(Matrix *mat)
 /**
  * Helper function for printing a vector
  */
-void print_vector(float *vec)
+static void print_vector(float *vec)
 {
     int i;
     for (i = 0; i < M; i++)
@@ -78,4 +77,4 @@ void print_vector(float *vec)
     }
 }
 
-const struct linalg_driver linalg_driver = {make_sensing_matrix, inner_product};
+const struct linalg_driver linalg_driver = {make_sensing_matrix, inner_product, print_sensing_matrix, print_vector};
