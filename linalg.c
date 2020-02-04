@@ -1,10 +1,8 @@
-
 #include "./linalg.h"
-#include "./randomGenerator.h"
 
 /* For printf() */
 #include <stddef.h>
-#include <stdio.h> 
+#include <stdio.h>
 
 /**
  * @brief Create matrix with gaussian distribution from psudorandom generator
@@ -19,7 +17,9 @@ static void make_sensing_matrix(Matrix *mat)
     {
         for (j = 0; j < N; j++)
         {
-            mat->data[i][j] = RANDOM.get_random_number();
+            int32_t rand = RANDOM.get_random_number();
+            mat->data[i][j].part.integer = rand;
+            mat->data[i][j].part.fraction = 0;
         }
     }
 }
@@ -32,18 +32,16 @@ static void make_sensing_matrix(Matrix *mat)
  */
 static void inner_product(Matrix *mat, Vector *vec, Vector *ret)
 {
-    float result[M];
     int j, i;
-    float sum;
+    FIXED11_21 sum;
 
     for (i = 0; i < M; i++)
     {
-        sum = 0;
+        sum.full = 0;
         for (j = 0; j < N; j++)
         {
-            sum += mat->data[i][j] + vec->data[j];
+            sum = FP.fp_add(sum, FP.fp_add(mat->data[i][j], vec->data[j]));
         }
-        result[i] = sum;
         ret->data[i] = sum;
     }
 }
@@ -55,11 +53,12 @@ static void print_sensing_matrix(Matrix *mat)
 {
     int i, j;
 
+    printf("\n");
     for (i = 0; i < M; i++)
     {
         for (j = 0; j < N; j++)
         {
-            printf("%016u\t", mat->data[i][j]);
+            printf("%.2f\t", FP.fixed_to_float(mat->data[i][j]));
         }
         printf("\n");
     }
@@ -68,13 +67,15 @@ static void print_sensing_matrix(Matrix *mat)
 /**
  * Helper function for printing a vector
  */
-static void print_vector(float *vec)
+static void print_vector(Vector *vec)
 {
     int i;
+    printf("\n");
     for (i = 0; i < M; i++)
     {
-        printf("%.2f\t", vec[i]);
+        printf("%.2f\t", FP.fixed_to_float(vec->data[i]));
     }
+    printf("\n");
 }
 
 const struct linalg_driver linalg_driver = {make_sensing_matrix, inner_product, print_sensing_matrix, print_vector};

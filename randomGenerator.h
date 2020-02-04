@@ -1,6 +1,8 @@
 #ifndef RANDOM_H_
 #define RANDOM_H_
 
+#include <inttypes.h>
+
 #define RANDOM random_driver
 
 struct random_driver {
@@ -8,7 +10,7 @@ struct random_driver {
   /**
    * \brief Provides a psuedo-random number generator interface
    */
-  float (* get_random_number)();
+  int32_t (* get_random_number)();
 
 };
 

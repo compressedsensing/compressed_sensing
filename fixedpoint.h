@@ -2,6 +2,7 @@
 #define FP_H_
 
 #include "contiki.h"
+#include <stdio.h>
 
 #define FP fixed_point_driver
 
@@ -17,8 +18,12 @@ typedef union FIXED11_21tag {
 struct fixed_point_driver
 {
     FIXED11_21(* fp_multiply)(FIXED11_21 a, FIXED11_21 b);
-    void (* fp_print)(FIXED11_21 fp);
+    FIXED11_21(* fp_add)(FIXED11_21 a, FIXED11_21 b);
+    /* Helpers */
+    double (* fixed_to_float)(FIXED11_21 input);
+    FIXED11_21 (* float_to_fixed)(double input);
 };
+
 
 extern const struct fixed_point_driver FP;
 

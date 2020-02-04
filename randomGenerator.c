@@ -40,7 +40,7 @@ static unsigned char getLFSR_bit(struct LFSR *reg)
  * @param input Expects a binary value saved in an unsigned char
  * @return returns -1 or 1 depending on input 0 or 1
  */
-signed char converter(unsigned char input)
+static signed char converter(unsigned char input)
 {
     if (input)
     {
@@ -58,21 +58,20 @@ static struct LFSR gen[3] =
  * @brief Method to generate a random number, from a pseudorandom generator
  * @return Returns a random number drawn from an LFSR sequence
  */
-static float get_random_number()
+static int32_t get_random_number()
 {
-    int j;
-    signed char sum;
+    int32_t sum, j;
 
     do
     {
         sum = 0;
         for (j = 0; j < L; j++)
         {
-            sum += converter(getLFSR_bit(&gen[j]));
+            sum += (int32_t)converter(getLFSR_bit(&gen[j]));
         }
-    } while (sum == L);
+    } while (sum == L || sum == -L);
 
-    return (float)sum;
+    return sum;
 }
 
 const struct random_driver random_driver = {get_random_number};
