@@ -35,13 +35,16 @@ static void inner_product(Matrix *mat, Vector *vec, Vector *ret)
     int j, i;
     FIXED11_21 sum;
 
+    printf("\n");
     for (i = 0; i < M; i++)
     {
         sum.full = 0;
         for (j = 0; j < N; j++)
         {
-            sum = FP.fp_add(sum, FP.fp_add(mat->data[i][j], vec->data[j]));
+            sum = FP.fp_add(sum, FP.fp_multiply(mat->data[i][j], vec->data[j]));
+            printf("%.2f\t", FP.fixed_to_float(sum));
         }
+        printf("\n");
         ret->data[i] = sum;
     }
 }
