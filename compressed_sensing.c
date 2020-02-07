@@ -32,6 +32,12 @@ PROCESS_THREAD(comp_sensing, ev, data)
 
     LINALG.print_vector(&ret);
 
+    FIXED11_21 a;
+
+    a = FP.float_to_fixed(30.0);
+    
+    printf("%.2f\n",FP.fixed_to_float(FP.fp_sqrt(a,20)));
+
     /* Process End */
     PROCESS_END();
 }

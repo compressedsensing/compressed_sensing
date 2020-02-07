@@ -96,4 +96,65 @@ static FIXED11_21 float_to_fixed(double input)
     return res;
 }
 
-const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_add, fixed_to_float, float_to_fixed};
+/**
+ * @brief Division of FP numbers
+ * @param a numinator
+ * @param b denominator
+ * @return a/b
+ */
+static FIXED11_21 fp_division(FIXED11_21 a, FIXED11_21 b)
+{
+
+    int64_t tmp = 0;
+    FIXED11_21 result;
+
+    tmp = (int64_t)a.full << FPART;
+    tmp = tmp + (b.full >> 1);
+    tmp = tmp / b.full;
+
+    result.full = (uint32_t)tmp;
+    return result;
+}
+
+/**
+ * @brief Subtracts two fixed point represented numbers with each other
+ * @param a fixed number to be subtract from
+ * @param b fixed number to be subtracted
+ * @return result of the subtracted
+ */
+static FIXED11_21 fp_subtract(FIXED11_21 a, FIXED11_21 b)
+{
+    FIXED11_21 result;
+
+    result.full = a.full - b.full; /* Has a risk of overflowing */
+
+    return result;
+}
+
+
+/**
+ * @brief Newton algorithm implementation of sqrt
+ * @param a the number to find the sqrt from
+ * @param iterations The number of iterations the newton method runs
+ * @result sqrt of a
+ */
+static FIXED11_21 fp_sqrt(FIXED11_21 a, int iterations){
+
+    FIXED11_21 result, inter;
+
+    // Initial guess set to 1
+    result.part.integer = 1;
+    result.part.fraction = 0;  
+    
+    int i;
+
+    for (i = 0; i < iterations; i++)
+    {
+        inter.full = result.full << 1;
+        result.full -= fp_division(fp_subtract(fp_multiply(result,result),a),(inter)).full;
+    }
+
+    return result;
+}
+
+const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_add,fp_subtract, fp_sqrt, fixed_to_float, float_to_fixed};
