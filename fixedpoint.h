@@ -23,6 +23,7 @@ struct fixed_point_driver
     FIXED11_21(* fp_division)(FIXED11_21 a, FIXED11_21 b);
     FIXED11_21(* fp_add)(FIXED11_21 a, FIXED11_21 b);
     FIXED11_21(* fp_subtract)(FIXED11_21 a, FIXED11_21 b);
+    FIXED11_21(* fp_pow)(FIXED11_21 a, int b);
     FIXED11_21(* fp_sqrt)(FIXED11_21 a,int iterations);
     /* Helpers */
     double (* fixed_to_float)(FIXED11_21 input);

@@ -3,10 +3,9 @@
 
 #include "./fixedpoint.h"
 #include "./randomGenerator.h"
+#include "./cs_config.h"
 
 #define LINALG linalg_driver
-#define M 3
-#define N 3
 
 struct Matrix
 {

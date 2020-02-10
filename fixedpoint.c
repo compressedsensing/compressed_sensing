@@ -131,30 +131,60 @@ static FIXED11_21 fp_subtract(FIXED11_21 a, FIXED11_21 b)
     return result;
 }
 
-
 /**
  * @brief Newton algorithm implementation of sqrt
  * @param a the number to find the sqrt from
  * @param iterations The number of iterations the newton method runs
  * @result sqrt of a
  */
-static FIXED11_21 fp_sqrt(FIXED11_21 a, int iterations){
+static FIXED11_21 fp_sqrt(FIXED11_21 a, int iterations)
+{
 
     FIXED11_21 result, inter;
 
     // Initial guess set to 1
     result.part.integer = 1;
-    result.part.fraction = 0;  
-    
+    result.part.fraction = 0;
+
     int i;
 
     for (i = 0; i < iterations; i++)
     {
         inter.full = result.full << 1;
-        result.full -= fp_division(fp_subtract(fp_multiply(result,result),a),(inter)).full;
+        result.full -= fp_division(fp_subtract(fp_multiply(result, result), a), (inter)).full;
     }
 
     return result;
 }
 
-const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_add,fp_subtract, fp_sqrt, fixed_to_float, float_to_fixed};
+/**
+ * @brief Provides the b'th power of number a
+ * @param a Number to get power from
+ * @param b The power qoutient
+ * @return result of the power
+ */
+static FIXED11_21 fp_pow(FIXED11_21 a, int b)
+{
+    int i;
+    FIXED11_21 result = a;
+
+    if (b == 0)
+    {
+        result.part.integer = 1;
+        result.part.fraction = 0;
+        return result;
+    }
+
+    for (i = 0; i < b - 1; i++)
+    {
+        // printf("Prev: %f\n", fixed_to_float(result));
+        // printf("Initial %f\n", fixed_to_float(a));
+        result = fp_multiply(result, a);
+        // printf("Result%f\n\n", fixed_to_float(result));
+    }
+
+    // printf("Final Result%f\n\n", fixed_to_float(result));
+    return result;
+}
+
+const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_add, fp_subtract, fp_pow, fp_sqrt, fixed_to_float, float_to_fixed};
