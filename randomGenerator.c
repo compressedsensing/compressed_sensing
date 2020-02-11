@@ -42,17 +42,22 @@ static uint16_t getLFSR_bit(struct LFSR *reg)
  */
 static int16_t converter(uint16_t input)
 {
-    if (input)
+    if (!input)
     {
         return (-1);
     }
     return 1;
 }
 
+
 static struct LFSR gen[3] =
-    {{0b1110001101001100, 0b1100110000000011},
-     {0b1110001110001000, 0b1100110001010001},
-     {0b1110001110001101, 0b1100110010010011}};
+    {{0b1010100011000100, 0b1000000000000001},
+     {0b1010111001011011, 0b1000000000000001},
+     {0b1010101010001010, 0b1000000000000001}};
+// static struct LFSR gen[3] =
+//     {{0b1110001101001100, 0b1100110000000011},
+//      {0b1110001110001000, 0b1100110001010001},
+//      {0b1110001110001101, 0b1100110010010011}};
 
 /**
  * @brief Method to generate a random number, from a pseudorandom generator
@@ -61,6 +66,8 @@ static struct LFSR gen[3] =
 static int32_t get_random_number()
 {
     int32_t sum, j;
+    int16_t tmp;
+    uint16_t hep;
 
     do
     {
@@ -68,6 +75,7 @@ static int32_t get_random_number()
         for (j = 0; j < L; j++)
         {
             sum += (int32_t)converter(getLFSR_bit(&gen[j]));
+            // printf("%d",sum);
         }
     } while (sum == L || sum == -L);
 

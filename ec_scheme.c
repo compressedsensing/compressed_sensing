@@ -21,12 +21,13 @@ void ec_transform(Vector *signal, Vector_M *result)
     for (i = 1; i < N; i++)
     {
         c = FP.fp_add(c, FP.fp_pow(signal->data[i], 2));
+        printf("%.2f\t", FP.fixed_to_float(c));
     }
+    printf("\n\n");
 
     FIXED11_21 e_max = FP.float_to_fixed(EMAX);
-    // printf("%.2f\t", FP.fixed_to_float(c));
 
-    c = FP.fp_sqrt(FP.fp_subtract(e_max, c), 10);
+    c = FP.fp_sqrt(FP.fp_subtract(e_max, c), 15);
     // printf("%.2f\n", FP.fixed_to_float(c));
 
     //Add c to the signal
@@ -38,6 +39,8 @@ void ec_transform(Vector *signal, Vector_M *result)
         aug_signal.data[i] = signal->data[i - 1];
     }
 
+    LINALG.print_vector(&aug_signal);
+
     // LINALG.print_sensing_matrix(&mat);
     // LINALG.print_vector(&aug_signal);
     // Ax = y From compressed sensing
@@ -47,23 +50,23 @@ void ec_transform(Vector *signal, Vector_M *result)
     // LINALG.inner_product(&mat, &aug_signal, &result);
 }
 
-// /**
-//  * @brief Pretty prints the final output value for a signal
-//  * @param signal The signal to pprint
-//  * @param length Length of the signal
-//  */
-// void pprint(Vector_M *signal)
-// {
-//     int i;
-//     printf("\n[");
-//     for (i = 0; i < M; i++)
-//     {
-//         printf("%.2f", FP.fixed_to_float(signal->data[i]));
-//         if(i != M-1){
-//             printf(", ");
-//         }
-//     }
-//     printf("]\n");
-// }
+/**
+ * @brief Pretty prints the final output value for a signal
+ * @param signal The signal to pprint
+ * @param length Length of the signal
+ */
+void pprint(Vector_M *signal)
+{
+    int i;
+    printf("\n[");
+    for (i = 0; i < M; i++)
+    {
+        printf("%.2f", FP.fixed_to_float(signal->data[i]));
+        if(i != M-1){
+            printf(", ");
+        }
+    }
+    printf("]\n");
+}
 
-const struct energy_concealment_driver energy_concealment_driver = {ec_transform};
+const struct energy_concealment_driver energy_concealment_driver = {ec_transform, pprint};

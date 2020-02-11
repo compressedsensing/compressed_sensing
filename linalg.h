@@ -42,7 +42,7 @@ struct linalg_driver
 
   /* Helper functions*/
   // void (*print_sensing_matrix)(Matrix *mat);
-  // void (*print_vector)(Vector *vec);
+  void (*print_vector)(Vector *vec);
 };
 
 extern const struct linalg_driver LINALG;

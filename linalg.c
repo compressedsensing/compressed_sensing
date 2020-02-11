@@ -90,18 +90,18 @@ static void multiply_sensing_matrix(Vector *signal, Vector_M *result)
 //     }
 // }
 
-// /**
-//  * Helper function for printing a vector
-//  */
-// static void print_vector(Vector *vec)
-// {
-//     int i;
-//     printf("\n");
-//     for (i = 0; i < N; i++)
-//     {
-//         printf("%.2f\t", FP.fixed_to_float(vec->data[i]));
-//     }
-//     printf("\n");
-// }
+/**
+ * Helper function for printing a vector
+ */
+static void print_vector(Vector *vec)
+{
+    int i;
+    printf("\n");
+    for (i = 0; i < N; i++)
+    {
+        printf("%.2f\t", FP.fixed_to_float(vec->data[i]));
+    }
+    printf("\n");
+}
 
-const struct linalg_driver linalg_driver = { multiply_sensing_matrix};
+const struct linalg_driver linalg_driver = { multiply_sensing_matrix,print_vector};
