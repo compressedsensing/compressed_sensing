@@ -12,7 +12,8 @@
 
 struct energy_concealment_driver
 {
-    void (* ec_transform)(Vector* signal, Vector* result, unsigned int length);
+    void (* ec_transform)(Vector* signal, Vector* result);
+    // void (* pprint)(Vector_M* signal);
 };
 
 extern const struct energy_concealment_driver EC;

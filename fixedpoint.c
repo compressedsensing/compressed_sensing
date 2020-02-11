@@ -2,29 +2,29 @@
 #include <inttypes.h>
 //Relentlessly stolen from: https://www.eetimes.com/fixed-point-math-in-c-2/#
 
-/**
- * Helper function that prints a 32-bit fractional bits 
- */
-static void printBits32(int32_t num)
-{
-    for (int bit = 0; bit < (sizeof(int32_t) * 8); bit++)
-    {
-        printf("%i ", num & 0x01);
-        num = num >> 1;
-    }
-}
+// /**
+//  * Helper function that prints a 32-bit fractional bits 
+//  */
+// static void printBits32(int32_t num)
+// {
+//     for (int bit = 0; bit < (sizeof(int32_t) * 8); bit++)
+//     {
+//         printf("%i ", num & 0x01);
+//         num = num >> 1;
+//     }
+// }
 
-/**
- * Helper function that prints a 64-bit fractional bits 
- */
-static void printBits64(int64_t num)
-{
-    for (int bit = 0; bit < (sizeof(int64_t) * 8); bit++)
-    {
-        printf("%li ", num & 0x01);
-        num = num >> 1;
-    }
-}
+// /**
+//  * Helper function that prints a 64-bit fractional bits 
+//  */
+// static void printBits64(int64_t num)
+// {
+//     for (int bit = 0; bit < (sizeof(int64_t) * 8); bit++)
+//     {
+//         printf("%li ", num & 0x01);
+//         num = num >> 1;
+//     }
+// }
 
 /**
  * @brief Multiplies two fixed point represented numbers with each other
@@ -34,25 +34,29 @@ static void printBits64(int64_t num)
  */
 static FIXED11_21 fp_multiply(FIXED11_21 a, FIXED11_21 b)
 {
-    int64_t tmp, Z;
+    long tmp;
+    long IL;
+
+    // long tmp, Z;
     FIXED11_21 result;
 
-    //Save result in double size
-    tmp = (int64_t)a.full * (int64_t)b.full;
+    // Save result in double size
+    tmp = (long)a.full * (long)b.full;
 
-    //Take out midder section of bits
-    tmp = tmp + (1 << 20);
-    tmp = tmp >> 21;
+    // Take out midder section of bits
+    tmp = tmp + (1 << FPART - 1);
+    tmp = tmp >> FPART;
 
-    //Saturate the result if over or under minimum value.
-    if (tmp > INT32_MAX) /* saturate the result before assignment */
-        Z = INT32_MAX;
-    else if (tmp < INT32_MIN)
-        Z = INT32_MIN;
-    else
-        Z = tmp;
+    // // Saturate the result if over or under minimum value.
+    // if (tmp > INT32_MAX) /* saturate the result before assignment */
+    //     Z = INT32_MAX;
+    // else if (tmp < INT32_MIN)
+    //     Z = INT32_MIN;
+    // else
+    
+    IL = tmp;
 
-    result.full = Z;
+    result.full = IL;
 
     return result;
 }
