@@ -5,15 +5,15 @@
 #include <stdio.h>
 
 #define FP fixed_point_driver
-#define IPART 11
-#define FPART 21
+#define IPART 21
+#define FPART 11
 
 typedef union FIXED11_21tag {
     int32_t full;
     struct part11_21tag
     {
-        int32_t fraction : 21;
-        int32_t integer : 11;
+        int32_t fraction : 11;
+        int32_t integer : 21;
     } part;
 } FIXED11_21;
 

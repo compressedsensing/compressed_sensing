@@ -37,22 +37,16 @@ static FIXED11_21 fp_multiply(FIXED11_21 a, FIXED11_21 b)
     long tmp;
     long IL;
 
-    // long tmp, Z;
     FIXED11_21 result;
 
     // Save result in double size
     tmp = (long)a.full * (long)b.full;
 
     // Take out midder section of bits
-    tmp = tmp + (1 << FPART - 1);
+    tmp = tmp + (1 << (FPART - 1));
     tmp = tmp >> FPART;
 
-    // // Saturate the result if over or under minimum value.
-    // if (tmp > INT32_MAX) /* saturate the result before assignment */
-    //     Z = INT32_MAX;
-    // else if (tmp < INT32_MIN)
-    //     Z = INT32_MIN;
-    // else
+    // Saturate the result if over or under minimum value.
     
     IL = tmp;
 
@@ -84,7 +78,7 @@ static FIXED11_21 fp_add(FIXED11_21 a, FIXED11_21 b)
 static double fixed_to_float(FIXED11_21 input)
 {
     double res = 0;
-    res = ((double)input.full / (double)(1 << 21));
+    res = ((double)input.full / (double)(1 << FPART));
     return res;
 }
 
@@ -96,7 +90,7 @@ static double fixed_to_float(FIXED11_21 input)
 static FIXED11_21 float_to_fixed(double input)
 {
     FIXED11_21 res;
-    res.full = (int32_t)(input * (1 << 21));
+    res.full = (int32_t)(input * (1 << FPART));
     return res;
 }
 
@@ -147,7 +141,7 @@ static FIXED11_21 fp_sqrt(FIXED11_21 a, int iterations)
     FIXED11_21 result, inter;
 
     // Initial guess set to 1
-    result.part.integer = 1;
+    result.part.integer = 50;
     result.part.fraction = 0;
 
     int i;
@@ -181,13 +175,9 @@ static FIXED11_21 fp_pow(FIXED11_21 a, int b)
 
     for (i = 0; i < b - 1; i++)
     {
-        // printf("Prev: %f\n", fixed_to_float(result));
-        // printf("Initial %f\n", fixed_to_float(a));
         result = fp_multiply(result, a);
-        // printf("Result%f\n\n", fixed_to_float(result));
     }
 
-    // printf("Final Result%f\n\n", fixed_to_float(result));
     return result;
 }
 

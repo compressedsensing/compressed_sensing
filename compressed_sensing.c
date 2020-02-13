@@ -19,15 +19,11 @@ PROCESS_THREAD(comp_sensing, ev, data)
                               273, 180, 79, -24, -118, -199, -259, -296, -306, -293, -258, -209, -150, -90,
                               -36, 5, 27, 28, 5, -38, -101, -175, 0};
 
-    // Create Matrix
-    // Matrix mat;
-    // LINALG.make_sensing_matrix(&mat);
 
-    // Print Matrix
-    // LINALG.print_sensing_matrix(&mat);
 
+
+    // Predefine return vector, and data vector : 
     Vector_M ret;
-    // // Vector vec = {FP.float_to_fixed(5.3), FP.float_to_fixed(9.2), FP.float_to_fixed(4.4)};
     Vector vec;
 
     int i;
@@ -60,6 +56,12 @@ PROCESS_THREAD(comp_sensing, ev, data)
     EC.ec_transform(&vec, &ret);
     printf("\n\n");
     EC.pprint(&ret);
+
+    // FIXED11_21 a,b,c;
+
+    // a = FP.float_to_fixed(500.0);
+    // printf("%.2f",FP.fixed_to_float(FP.fp_pow(a,2)));
+
 
     // for (i = 0; i < 6; i++)
     // {

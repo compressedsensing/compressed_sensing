@@ -2,6 +2,7 @@
 
 #define L 3
 
+/* Defines an struct for LFSR registers. */
 struct LFSR
 {
     uint16_t state;
@@ -9,6 +10,20 @@ struct LFSR
 };
 
 typedef struct LFSR LFSR;
+
+/**
+ * @brief Reverses the order of bits in a 2 Bytes
+ * @param b Bit to be inverted
+ * @return Reverse bits of input 
+ */
+uint16_t reverse_bits16(uint16_t b)
+{
+    b = (b & 0xFF00) >> 8 | (b & 0x00FF) << 8;
+    b = (b & 0xF0F0) >> 4 | (b & 0x0F0F) << 4;
+    b = (b & 0xCCCC) >> 2 | (b & 0x3333) << 2;
+    b = (b & 0xAAAA) >> 1 | (b & 0x5555) << 1;
+    return b;
+}
 
 /**
  * @brief Get the next bit in an LFSR register sequence, given a LFSR register
@@ -22,7 +37,7 @@ static uint16_t getLFSR_bit(struct LFSR *reg)
 
     cs = reg->state;
 
-    cp = nbit = cs & reg->polynomiel;
+    cp = nbit = reverse_bits16(cs & reg->polynomiel);
 
     for (i = 1; i < 16; i++)
     {
@@ -31,7 +46,6 @@ static uint16_t getLFSR_bit(struct LFSR *reg)
     }
     reg->state = (cs >> 1) | (nbit << 15); /*  rotate in new bit */
 
-    // printf("%0.1x", cs & 0x01);
     return cs & 0x01;
 }
 
@@ -49,15 +63,10 @@ static int16_t converter(uint16_t input)
     return 1;
 }
 
-
-static struct LFSR gen[3] =
+static struct LFSR gen[L] =
     {{0b1010100011000100, 0b1000000000000001},
      {0b1010111001011011, 0b1000000000000001},
      {0b1010101010001010, 0b1000000000000001}};
-// static struct LFSR gen[3] =
-//     {{0b1110001101001100, 0b1100110000000011},
-//      {0b1110001110001000, 0b1100110001010001},
-//      {0b1110001110001101, 0b1100110010010011}};
 
 /**
  * @brief Method to generate a random number, from a pseudorandom generator
@@ -66,16 +75,14 @@ static struct LFSR gen[3] =
 static int32_t get_random_number()
 {
     int32_t sum, j;
-    int16_t tmp;
-    uint16_t hep;
 
+    /* As long as the value is equal to -+ L, keep drawing new numbers*/
     do
     {
         sum = 0;
         for (j = 0; j < L; j++)
         {
             sum += (int32_t)converter(getLFSR_bit(&gen[j]));
-            // printf("%d",sum);
         }
     } while (sum == L || sum == -L);
 

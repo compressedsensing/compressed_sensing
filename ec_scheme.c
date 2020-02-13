@@ -8,27 +8,26 @@
  */
 void ec_transform(Vector *signal, Vector_M *result)
 {
-    // Create Matrix
-    // Matrix mat;
-    // LINALG.make_sensing_matrix(&mat);
 
     // Find energy concealment variable 'c'
-
-    FIXED11_21 c;
+    FIXED11_21 c,hep;
     c.full = 0;
 
     uint16_t i;
     for (i = 1; i < N; i++)
     {
-        c = FP.fp_add(c, FP.fp_pow(signal->data[i], 2));
-        printf("%.2f\t", FP.fixed_to_float(c));
+        hep.full = FP.fp_pow(signal->data[i], 2).full >> 2;
+
+        c = FP.fp_add(c, hep);
     }
-    printf("\n\n");
 
-    FIXED11_21 e_max = FP.float_to_fixed(EMAX);
+    FIXED11_21 e_max;
+    e_max.full = FP.float_to_fixed(EMAX).full;
 
-    c = FP.fp_sqrt(FP.fp_subtract(e_max, c), 15);
-    // printf("%.2f\n", FP.fixed_to_float(c));
+    c = FP.fp_subtract(e_max, c);
+    c = FP.fp_sqrt(c, 20);
+
+    c.full = c.full << 1;
 
     //Add c to the signal
     Vector aug_signal;
@@ -39,15 +38,8 @@ void ec_transform(Vector *signal, Vector_M *result)
         aug_signal.data[i] = signal->data[i - 1];
     }
 
-    LINALG.print_vector(&aug_signal);
-
-    // LINALG.print_sensing_matrix(&mat);
-    // LINALG.print_vector(&aug_signal);
     // Ax = y From compressed sensing
     LINALG.multiply_sensing_matrix(&aug_signal, result);
-   
-
-    // LINALG.inner_product(&mat, &aug_signal, &result);
 }
 
 /**
