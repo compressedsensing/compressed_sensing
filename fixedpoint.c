@@ -32,67 +32,62 @@
  * @param b fixed number to be multiplied
  * @return result of the multiplication
  */
-static FIXED11_21 fp_multiply(FIXED11_21 a, FIXED11_21 b)
+static int16_t fp_multiply(int16_t a, int16_t b)
 {
-    long tmp;
-    long IL;
+    int32_t tmp;
+    int32_t IL;
 
-    FIXED11_21 result;
+    int16_t result;
 
     // Save result in double size
-    tmp = (long)a.full * (long)b.full;
+    tmp = (int32_t)a * (int32_t)b;
 
     // Take out midder section of bits
     tmp = tmp + (1 << (FPART - 1));
     tmp = tmp >> FPART;
 
-    // Saturate the result if over or under minimum value.
-    
+    // // Saturate the result if over or under minimum value.
+    // if (tmp > INT32_MAX) /* saturate the result before assignment */
+    //     Z = INT32_MAX;
+    // else if (tmp < INT32_MIN)
+    //     Z = INT32_MIN;
+    // else
+
     IL = tmp;
 
-    result.full = IL;
+    result = IL;
 
     return result;
 }
 
-/**
- * @brief Multiplies two fixed point represented numbers with each other
- * @param a fixed number to be multiplied
- * @param b fixed number to be multiplied
- * @return result of the multiplication
- */
-static FIXED11_21 fp_add(FIXED11_21 a, FIXED11_21 b)
-{
-    FIXED11_21 result;
 
-    result.full = a.full + b.full; /* Has a risk of overflowing */
-
-    return result;
-}
 
 /**
  * @brief Converts a fixed point representation number to a double
  * @param input The fixed point value
  * @return float(double) representation of input value
  */
-static double fixed_to_float(FIXED11_21 input)
-{
-    double res = 0;
-    res = ((double)input.full / (double)(1 << FPART));
-    return res;
-}
+
 
 /**
  * @brief Coverts a float(double) to a fixed_point double 
  * @param input The input float
  * @return  fixed point reprensentation of a float
  */
-static FIXED11_21 float_to_fixed(double input)
+static double fixed_to_float16(int16_t input)
 {
-    FIXED11_21 res;
-    res.full = (int32_t)(input * (1 << FPART));
+    double res = 0;
+    res = ((double)input / (double)(1 << FPART));
     return res;
 }
+
+static int16_t float_to_fixed16(double input)
+{
+    int16_t res;
+    res = (int16_t)(input * (1 << FPART));
+    return res;
+}
+
 
 /**
  * @brief Division of FP numbers
@@ -100,34 +95,20 @@ static FIXED11_21 float_to_fixed(double input)
  * @param b denominator
  * @return a/b
  */
-static FIXED11_21 fp_division(FIXED11_21 a, FIXED11_21 b)
+static int16_t fp_division(int16_t a, int16_t b)
 {
 
-    int64_t tmp = 0;
-    FIXED11_21 result;
+    int32_t tmp = 0;
+    int16_t result;
 
-    tmp = (int64_t)a.full << FPART;
-    tmp = tmp + (b.full >> 1);
-    tmp = tmp / b.full;
+    tmp = (int32_t)a << FPART;
+    tmp = tmp + (b >> 1);
+    tmp = tmp / b;
 
-    result.full = (uint32_t)tmp;
+    result = (int16_t)tmp;
     return result;
 }
 
-/**
- * @brief Subtracts two fixed point represented numbers with each other
- * @param a fixed number to be subtract from
- * @param b fixed number to be subtracted
- * @return result of the subtracted
- */
-static FIXED11_21 fp_subtract(FIXED11_21 a, FIXED11_21 b)
-{
-    FIXED11_21 result;
-
-    result.full = a.full - b.full; /* Has a risk of overflowing */
-
-    return result;
-}
 
 /**
  * @brief Newton algorithm implementation of sqrt
@@ -135,21 +116,19 @@ static FIXED11_21 fp_subtract(FIXED11_21 a, FIXED11_21 b)
  * @param iterations The number of iterations the newton method runs
  * @result sqrt of a
  */
-static FIXED11_21 fp_sqrt(FIXED11_21 a, int iterations)
+static int16_t fp_sqrt(int16_t a, int iterations)
 {
 
-    FIXED11_21 result, inter;
+    int16_t result, inter;
 
     // Initial guess set to 1
-    result.part.integer = 50;
-    result.part.fraction = 0;
-
+    result = (50 << FPART);
     int i;
 
     for (i = 0; i < iterations; i++)
     {
-        inter.full = result.full << 1;
-        result.full -= fp_division(fp_subtract(fp_multiply(result, result), a), (inter)).full;
+        inter = result << 1; /* *2*/
+        result -= fp_division((fp_multiply(result, result)- a), inter);
     }
 
     return result;
@@ -161,15 +140,14 @@ static FIXED11_21 fp_sqrt(FIXED11_21 a, int iterations)
  * @param b The power qoutient
  * @return result of the power
  */
-static FIXED11_21 fp_pow(FIXED11_21 a, int b)
+static int16_t fp_pow(int16_t a, int b)
 {
     int i;
-    FIXED11_21 result = a;
+    int16_t result = a;
 
     if (b == 0)
     {
-        result.part.integer = 1;
-        result.part.fraction = 0;
+        result = (1 << FPART);
         return result;
     }
 
@@ -181,4 +159,4 @@ static FIXED11_21 fp_pow(FIXED11_21 a, int b)
     return result;
 }
 
-const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_add, fp_subtract, fp_pow, fp_sqrt, fixed_to_float, float_to_fixed};
+const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_pow, fp_sqrt, fixed_to_float16, float_to_fixed16};

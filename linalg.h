@@ -9,12 +9,12 @@
 
 struct Vector
 {
-  FIXED11_21 data[N];
+  int16_t data[N];
 };
 
 struct Vector_M
 {
-  FIXED11_21 data[M];
+  int16_t data[M];
 };
 
 typedef struct Vector Vector;

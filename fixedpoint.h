@@ -5,29 +5,20 @@
 #include <stdio.h>
 
 #define FP fixed_point_driver
-#define IPART 21
-#define FPART 11
-
-typedef union FIXED11_21tag {
-    int32_t full;
-    struct part11_21tag
-    {
-        int32_t fraction : 11;
-        int32_t integer : 21;
-    } part;
-} FIXED11_21;
+#define IPART 8
+#define FPART 8
 
 struct fixed_point_driver
 {
-    FIXED11_21(* fp_multiply)(FIXED11_21 a, FIXED11_21 b);
-    FIXED11_21(* fp_division)(FIXED11_21 a, FIXED11_21 b);
-    FIXED11_21(* fp_add)(FIXED11_21 a, FIXED11_21 b);
-    FIXED11_21(* fp_subtract)(FIXED11_21 a, FIXED11_21 b);
-    FIXED11_21(* fp_pow)(FIXED11_21 a, int b);
-    FIXED11_21(* fp_sqrt)(FIXED11_21 a,int iterations);
+    int16_t(* fp_multiply)(int16_t a, int16_t b);
+    int16_t(* fp_division)(int16_t a, int16_t b);
+    // FIXED11_21(* fp_add)(FIXED11_21 a, FIXED11_21 b);
+    // FIXED11_21(* fp_subtract)(FIXED11_21 a, FIXED11_21 b);
+    int16_t(* fp_pow)(int16_t a, int b);
+    int16_t(* fp_sqrt)(int16_t a,int iterations);
     /* Helpers */
-    double (* fixed_to_float)(FIXED11_21 input);
-    FIXED11_21 (* float_to_fixed)(double input);
+    double (*fixed_to_float16)(int16_t input);
+    int16_t (*float_to_fixed16)(double input);
 };
 
 
