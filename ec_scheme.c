@@ -10,7 +10,7 @@ void ec_transform(Vector *signal, Vector_M *result)
 {
 
     // Find energy concealment variable 'c'
-    FIXED11_21 c,hep;
+    FIXED11_21 c, hep;
     c.full = 0;
 
     uint16_t i;
@@ -25,9 +25,12 @@ void ec_transform(Vector *signal, Vector_M *result)
     e_max.full = FP.float_to_fixed(EMAX).full;
 
     c = FP.fp_subtract(e_max, c);
+    // printf("%2f\t",FP.fixed_to_float(c));
     c = FP.fp_sqrt(c, 20);
+    // printf("%2f\t",FP.fixed_to_float(c));
 
     c.full = c.full << 1;
+    // printf("%2f\t",FP.fixed_to_float(c));
 
     //Add c to the signal
     Vector aug_signal;
@@ -37,6 +40,7 @@ void ec_transform(Vector *signal, Vector_M *result)
     {
         aug_signal.data[i] = signal->data[i - 1];
     }
+    printf("here!!\n");
 
     // Ax = y From compressed sensing
     LINALG.multiply_sensing_matrix(&aug_signal, result);
@@ -53,8 +57,10 @@ void pprint(Vector_M *signal)
     printf("\n[");
     for (i = 0; i < M; i++)
     {
-        printf("%.2f", FP.fixed_to_float(signal->data[i]));
-        if(i != M-1){
+        printf("%02x \t", signal->data[i]);
+        // printf("%.2f", FP.fixed_to_float(signal->data[i]));
+        if (i != M - 1)
+        {
             printf(", ");
         }
     }

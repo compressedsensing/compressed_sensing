@@ -12,12 +12,15 @@ static void multiply_sensing_matrix(Vector *signal, Vector_M *result)
     FIXED11_21 rand, sum;
     rand.full = 0;
 
+    // printf("here!!\n");
     for (j = 0; j < M; j++)
     {
+        // printf("%d\n",10);
         sum.full = 0;
         for (i = 0; i < N; i++)
         {
             rand.part.integer = RANDOM.get_random_number();
+            rand.part.fraction = 0;
             sum = FP.fp_add(sum, FP.fp_multiply(rand, signal->data[i]));
         }
         result->data[j] = sum;
@@ -38,4 +41,4 @@ static void print_vector(Vector *vec)
     printf("\n");
 }
 
-const struct linalg_driver linalg_driver = { multiply_sensing_matrix,print_vector};
+const struct linalg_driver linalg_driver = {multiply_sensing_matrix, print_vector};

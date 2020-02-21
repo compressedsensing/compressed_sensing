@@ -30,7 +30,7 @@ uint16_t reverse_bits16(uint16_t b)
  * @param reg pointer to a LFSR register
  * @return The next 
  */
-static uint16_t getLFSR_bit(struct LFSR *reg)
+static unsigned char getLFSR_bit(struct LFSR *reg)
 {
     uint16_t cs, cp, nbit;
     int i = 0;
@@ -82,11 +82,11 @@ static int32_t get_random_number()
         sum = 0;
         for (j = 0; j < L; j++)
         {
-            sum += (int32_t)converter(getLFSR_bit(&gen[j]));
+            sum += converter(getLFSR_bit(&gen[j]));
         }
     } while (sum == L || sum == -L);
 
-    return sum;
+    return -1;
 }
 
 const struct random_driver random_driver = {get_random_number};
