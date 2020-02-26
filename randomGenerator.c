@@ -1,4 +1,5 @@
 #include "./randomGenerator.h"
+#include "stdio.h"
 
 #define L 3
 
@@ -58,23 +59,25 @@ static int16_t converter(uint16_t input)
 {
     if (!input)
     {
+        // printf("ZERO\n");
         return (-1);
     }
+    // printf("ONE\n");
     return 1;
 }
 
 static struct LFSR gen[L] =
-    {{0b1010100011000100, 0b1000000000000001},
-     {0b1010111001011011, 0b1000000000000001},
-     {0b1010101010001010, 0b1000000000000001}};
+    {{0b1010100011000100, 0b1100000000000001},
+     {0b1010111001011011, 0b1001000000000001},
+     {0b1010101010001010, 0b1000010000000001}};
 
 /**
  * @brief Method to generate a random number, from a pseudorandom generator
  * @return Returns a random number drawn from an LFSR sequence
  */
-static int32_t get_random_number()
+static int16_t get_random_number()
 {
-    int32_t sum, j;
+    int16_t sum, j;
 
     /* As long as the value is equal to -+ L, keep drawing new numbers*/
     do
@@ -83,10 +86,11 @@ static int32_t get_random_number()
         for (j = 0; j < L; j++)
         {
             sum += converter(getLFSR_bit(&gen[j]));
+
         }
     } while (sum == L || sum == -L);
 
-    return -1;
+    return sum;
 }
 
 const struct random_driver random_driver = {get_random_number};

@@ -46,6 +46,14 @@ static int16_t fp_multiply(int16_t a, int16_t b)
     tmp = tmp + (1 << (FPART - 1));
     tmp = tmp >> FPART;
 
+    #if DEBUG
+    if(tmp > INT16_MAX){
+        printf("a : %d, b : %d\n\n", a,b);
+        // printf();
+        printf("Possible Overflow Error");
+    }
+    #endif
+
     // // Saturate the result if over or under minimum value.
     // if (tmp > INT32_MAX) /* saturate the result before assignment */
     //     Z = INT32_MAX;
@@ -60,20 +68,55 @@ static int16_t fp_multiply(int16_t a, int16_t b)
     return result;
 }
 
+static int32_t fp_multiply32(int32_t a, int32_t b)
+{
+    int64_t tmp;
+    int64_t IL;
 
+    int32_t result;
 
+    // Save result in double size
+    tmp = (int64_t)a * (int64_t)b;
+
+    // Take out midder section of bits
+    tmp = tmp + (1 << (16 - 1));
+    tmp = tmp >> 16;
+
+    // Saturate the result if over or under minimum value.
+    #if DEBUG
+    if(tmp > INT32_MAX){
+        printf("POSSIBLE OVERFLOW");
+        // tmp = tmp % 0x00010000;
+    }
+    #endif
+
+    IL = tmp;
+
+    result = IL;
+
+    return result;
+}
 /**
- * @brief Converts a fixed point representation number to a double
- * @param input The fixed point value
- * @return float(double) representation of input value
+ * @brief Division of FP numbers
+ * @param a numinator
+ * @param b denominator
+ * @return a/b
  */
+static int32_t fp_division32(int32_t a, int32_t b)
+{
 
+    int64_t tmp = 0;
+    int32_t result;
 
-/**
- * @brief Coverts a float(double) to a fixed_point double 
- * @param input The input float
- * @return  fixed point reprensentation of a float
- */
+    tmp = (int64_t)a << 16;
+    tmp = tmp + (b >> 1);
+    tmp = tmp / b;
+
+    result = (int32_t)tmp;
+    return result;
+}
+
+#if DEBUG && FLOAT
 static double fixed_to_float16(int16_t input)
 {
     double res = 0;
@@ -88,6 +131,25 @@ static int16_t float_to_fixed16(double input)
     return res;
 }
 
+/**
+ * @brief Coverts a float(double) to a fixed_point double 
+ * @param input The input float
+ * @return  fixed point reprensentation of a float
+ */
+static double fixed_to_float32(int32_t input)
+{
+    double res = 0;
+    res = ((double)input / (double)(1 << 16));
+    return res;
+}
+
+static int32_t float_to_fixed32(double input)
+{
+    int32_t res;
+    res = (int32_t)(input * (1 << 16));
+    return res;
+}
+#endif
 
 /**
  * @brief Division of FP numbers
@@ -116,20 +178,23 @@ static int16_t fp_division(int16_t a, int16_t b)
  * @param iterations The number of iterations the newton method runs
  * @result sqrt of a
  */
-static int16_t fp_sqrt(int16_t a, int iterations)
+static int32_t fp_sqrt(int32_t a, int iterations)
 {
+    LOG_INFO("SQRT called\n");
+    int32_t result, inter;
 
-    int16_t result, inter;
+    // Initial guess set to 10 
+    result = 0xa0000;
 
-    // Initial guess set to 1
-    result = (50 << FPART);
     int i;
 
     for (i = 0; i < iterations; i++)
     {
-        inter = result << 1; /* *2*/
-        result -= fp_division((fp_multiply(result, result)- a), inter);
+        inter = result << 1; /* *2 */
+        // LOG_INFO("\nresult: %.2f, inter: %.2f", fixed_to_float32(result), fixed_to_float32(inter));
+        result -= fp_division32((fp_multiply32(result, result)- a), inter);
     }
+    LOG_INFO("\nSQRT completed\n");
 
     return result;
 }
@@ -159,4 +224,9 @@ static int16_t fp_pow(int16_t a, int b)
     return result;
 }
 
-const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_pow, fp_sqrt, fixed_to_float16, float_to_fixed16};
+
+#if DEBUG && FLOAT
+const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_pow, fp_sqrt, fixed_to_float16,float_to_fixed16, fixed_to_float32,float_to_fixed32};
+#else
+const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_division, fp_pow, fp_sqrt};
+#endif

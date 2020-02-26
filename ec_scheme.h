@@ -3,6 +3,7 @@
 
 #include "contiki.h"
 #include <stdio.h>
+#include "sys/log.h"
 
 #include "./fixedpoint.h"
 #include "./linalg.h"
@@ -13,7 +14,9 @@
 struct energy_concealment_driver
 {
     void (* ec_transform)(Vector* signal, Vector_M* result);
+    #if DEBUG
     void (* pprint)(Vector_M* signal);
+    #endif
 };
 
 extern const struct energy_concealment_driver EC;

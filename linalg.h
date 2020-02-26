@@ -9,7 +9,7 @@
 
 struct Vector
 {
-  int16_t data[N];
+  int16_t data[N_CS];
 };
 
 struct Vector_M

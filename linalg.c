@@ -17,11 +17,13 @@ static void multiply_sensing_matrix(Vector *signal, Vector_M *result)
     {
         // printf("%d\n",10);
         sum = 0;
-        for (i = 0; i < N; i++)
+        for (i = 0; i < N_CS; i++)
         {
             rand = (RANDOM.get_random_number() << FPART);
             sum += FP.fp_multiply(rand, signal->data[i]);
+            // printf("sum : %.2f \t", FP.fixed_to_float16(rand));
         }
+        // printf("\n\n");
         result->data[j] = sum;
     }
 }
@@ -33,9 +35,13 @@ static void print_vector(Vector *vec)
 {
     int i;
     printf("\n");
-    for (i = 0; i < N; i++)
+    for (i = 0; i < N_CS; i++)
     {
+        #if FLOAT
         printf("%.2f\t", FP.fixed_to_float16(vec->data[i]));
+        #else
+        printf("%08x\t", vec->data[i]);
+        #endif
     }
     printf("\n");
 }
