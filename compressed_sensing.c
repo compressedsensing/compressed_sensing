@@ -10,6 +10,7 @@
 #include "net/routing/routing.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
+#include "cc2420.h"
 
 #define UDP_CLIENT_PORT 8765
 #define UDP_SERVER_PORT 5678
@@ -33,28 +34,29 @@ AUTOSTART_PROCESSES(&comp_sensing);
 // static const struct unicast_callbacks unicast_callbacks = {sent_uc};
 // static struct unicast_conn uc;
 
-static void
-udp_rx_callback(struct simple_udp_connection *c,
-                const uip_ipaddr_t *sender_addr,
-                uint16_t sender_port,
-                const uip_ipaddr_t *receiver_addr,
-                uint16_t receiver_port,
-                const uint8_t *data,
-                uint16_t datalen)
-{
-    uint16_t i;
-    for (i = 0; i < datalen; i++)
-    {
-        LOG_INFO_("%02x", data[i]);
-    }
-    LOG_INFO_("\n");
-}
+// static void
+// udp_rx_callback(struct simple_udp_connection *c,
+//                 const uip_ipaddr_t *sender_addr,
+//                 uint16_t sender_port,
+//                 const uip_ipaddr_t *receiver_addr,
+//                 uint16_t receiver_port,
+//                 const uint8_t *data,
+//                 uint16_t datalen)
+// {
+//     uint16_t i;
+//     for (i = 0; i < datalen; i++)
+//     {
+//         LOG_INFO_("%02x", data[i]);
+//     }
+//     LOG_INFO_("\n");
+// }
+
 
 PROCESS_THREAD(comp_sensing, ev, data)
 {
     // PROCESS_EXITHANDLER(unicast_close(&uc);)
     /* Declare variables required */
-    int16_t signal_bytes[M] = {0};
+    static int16_t signal_bytes[M] = {0};
     static const int16_t sensor_data[N_CS] = {0, 242, 242, 242, 242, 242, 242, 242, 242, 243, 243, 244, 243, 243, 243, 244, 245, 246, 246,
                                               246, 246, 245, 244, 244, 244, 243, 243, 242, 241, 242, 242, 241, 241, 240, 240, 239, 239,
                                               238, 238, 238, 239, 240, 240, 240, 241, 241, 241, 240, 241, 241, 241, 241, 241, 241, 241,
@@ -91,8 +93,8 @@ PROCESS_THREAD(comp_sensing, ev, data)
     //                      1986, 0};
 
     // Predefine return vector, and data vector :
-    Vector_M ret;
-    Vector vec;
+    static Vector_M ret;
+    static Vector vec;
 
     int i;
     for (i = 0; i < N_CS; i++)
@@ -130,37 +132,47 @@ PROCESS_THREAD(comp_sensing, ev, data)
     // }
 
     // b.full = 144787;
-    EC.ec_transform(&vec, &ret);
-    
-    #if DEBUG
+   
+            EC.ec_transform(&vec, &ret);
+#if DEBUG
     EC.pprint(&ret);
-    #endif
+#endif
 
-    for (i  = 0; i < M; i++)
+    cc2420_set_txpower(31);
+
+    for (i = 0; i < M; i++)
     {
         signal_bytes[i] = ret.data[i];
     }
-    
 
     /* Transmission code */
     simple_udp_register(&udp_conn, UDP_CLIENT_PORT, NULL,
-                        UDP_SERVER_PORT, udp_rx_callback);
+                        UDP_SERVER_PORT, NULL);
 
     etimer_set(&periodic_timer, SEND_INTERVAL);
     while (1)
     {
         PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+
+
+        NETSTACK_RADIO.on();
         if (NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr))
         {
             /* Send to DAG root */
-            simple_udp_sendto(&udp_conn, signal_bytes, M, &dest_ipaddr);
+            simple_udp_sendto(&udp_conn, signal_bytes, M * 2, &dest_ipaddr);
         }
         else
         {
             LOG_INFO("Not reachable yet\n");
         }
         /* Add some jitter */
-        etimer_set(&periodic_timer, SEND_INTERVAL - CLOCK_SECOND);
+        // EC.ec_transform(&vec, &ret);
+
+        etimer_set(&periodic_timer, 4* CLOCK_SECOND);
+        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+
+        etimer_set(&periodic_timer, SEND_INTERVAL);
+        NETSTACK_RADIO.off();
     }
 
     // printf("DONE\n\n");

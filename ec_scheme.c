@@ -81,7 +81,7 @@ void pprint(Vector_M *signal)
 #if FLOAT
         printf("%.2f", FP.fixed_to_float16(signal->data[i]));
 #else
-        printf("%08x", signal->data[i]);
+        printf("%04x", signal->data[i]);
 #endif
         if (i != M - 1)
         {
