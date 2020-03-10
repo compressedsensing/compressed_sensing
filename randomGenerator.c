@@ -1,5 +1,6 @@
 #include "./randomGenerator.h"
 #include "stdio.h"
+#include "inttypes.h"
 
 #define L 3
 
@@ -17,37 +18,51 @@ typedef struct LFSR LFSR;
  * @param b Bit to be inverted
  * @return Reverse bits of input 
  */
-uint16_t reverse_bits16(uint16_t b)
-{
-    b = (b & 0xFF00) >> 8 | (b & 0x00FF) << 8;
-    b = (b & 0xF0F0) >> 4 | (b & 0x0F0F) << 4;
-    b = (b & 0xCCCC) >> 2 | (b & 0x3333) << 2;
-    b = (b & 0xAAAA) >> 1 | (b & 0x5555) << 1;
-    return b;
-}
+// uint16_t reverse_bits16(uint16_t b)
+// {
+//     b = (b & 0xFF00) >> 8 | (b & 0x00FF) << 8;
+//     b = (b & 0xF0F0) >> 4 | (b & 0x0F0F) << 4;
+//     b = (b & 0xCCCC) >> 2 | (b & 0x3333) << 2;
+//     b = (b & 0xAAAA) >> 1 | (b & 0x5555) << 1;
+//     return b;
+// }
 
 /**
  * @brief Get the next bit in an LFSR register sequence, given a LFSR register
  * @param reg pointer to a LFSR register
  * @return The next 
  */
-static unsigned char getLFSR_bit(struct LFSR *reg)
+static uint8_t getLFSR_bit(struct LFSR *reg)
 {
-    uint16_t cs, cp, nbit;
-    int i = 0;
+    uint16_t bit;
+    uint8_t output;
 
-    cs = reg->state;
+    output = reg->state & 0x01;
+    bit = ((reg->state >> 0) ^ (reg->state >> 2) ^ (reg->state >> 3) ^ (reg->state >> 5));
+    reg->state = (reg->state >> 1) | (bit << 15);
 
-    cp = nbit = reverse_bits16(cs & reg->polynomiel);
+    return output;
 
-    for (i = 1; i < 16; i++)
-    {
-        /* xor all bits together */
-        nbit ^= (cp >> i);
-    }
-    reg->state = (cs >> 1) | (nbit << 15); /*  rotate in new bit */
+    // uint16_t cs,cp, nbit;
+    // int i = 0;
 
-    return cs & 0x01;
+    // cs = reg->state;
+
+    // // nbit = reverse_bits16(cs & reg->polynomiel);
+    // cp = nbit = reverse_bits16(cs & reg->polynomiel);
+
+    // for (i = 1; i < 16; i++)
+    // {
+    //     /* xor all bits together */
+    //     nbit ^= (cp >> i);
+    // }
+
+    // reg->state = (cs >> 1) | (nbit << 15); /*  rotate in new bit */
+
+
+    // return cs & 0x01;
+
+    // return 0x01;
 }
 
 /**
@@ -67,9 +82,9 @@ static int16_t converter(uint16_t input)
 }
 
 static struct LFSR gen[L] =
-    {{0b1010100011000100, 0b1100000000000001},
-     {0b1010111001011011, 0b1001000000000001},
-     {0b1010101010001010, 0b1000010000000001}};
+    {{0b1010100011000100, 0b0000000000101101},
+     {0b1010111001011011, 0b0000000000101101},
+     {0b1010101010001010, 0b0000000000101101}};
 
 /**
  * @brief Method to generate a random number, from a pseudorandom generator
@@ -86,7 +101,7 @@ static int16_t get_random_number()
         for (j = 0; j < L; j++)
         {
             sum += converter(getLFSR_bit(&gen[j]));
-
+            // sum += getLFSR_bit(&gen[j]);
         }
     } while (sum == L || sum == -L);
 

@@ -25,7 +25,7 @@ void ec_transform(Vector *signal, Vector_M *result)
     }
     LOG_INFO("\nPowerLoop_done\n\n");
     int32_t e_max;
-    e_max = 0x00c80000;
+    e_max = 0x00c80000 << 1;
     // printf("e_maks : %08x \n\n",e_max);
     // FP.fixed_to_float16()
 

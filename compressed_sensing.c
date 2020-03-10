@@ -10,13 +10,20 @@
 #include "net/routing/routing.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
-#include "cc2420.h"
+
+// #include "cc2420.h"
 
 #define UDP_CLIENT_PORT 8765
 #define UDP_SERVER_PORT 5678
 #define SEND_INTERVAL (10 * CLOCK_SECOND)
 
 static struct simple_udp_connection udp_conn;
+// static struct ctimer timer;
+static Vector_M ret;
+static Vector vec;
+// static uint16_t i = 0;
+static uint8_t signal_bytes[M * 2] = {0};
+static uip_ipaddr_t dest_ipaddr = {{0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x12, 0x74, 0x00, 0x1a, 0x45, 0xa3, 0x30}};
 
 PROCESS(comp_sensing, "compressed");
 AUTOSTART_PROCESSES(&comp_sensing);
@@ -51,12 +58,40 @@ AUTOSTART_PROCESSES(&comp_sensing);
 //     LOG_INFO_("\n");
 // }
 
+// static void
+// callback(void *ptr)
+// {
+//     LOG_INFO("Starting transmission loop\n");
+//     LOG_INFO("Timer expired, check if receiver is reachable\n");
+//     // if (NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr)) {
+//     /* Send to DAG root */
+//     uint8_t buf[128] = {0};
+//     LOG_INFO("Sending to receiver mote\n");
+
+//     // Fixed point to bytes
+//     for (i = 0; i < M * 2; i += 2)
+//     {
+//         signal_bytes[i + 0] = (uint8_t)((ret.data[i >> 1] & 0xFF00) >> 8);
+//         signal_bytes[i + 1] = (uint8_t)((ret.data[i >> 1] & 0x00FF) >> 0);
+//     }
+
+//     for (i = 0; i <= 2 * M / 128; i++)
+//     {
+//         memset(buf, 0, 128);
+//         memcpy(buf, signal_bytes + (i * 128), i == 2 * M / 128 ? 2 * M % 128 : 128);
+//         simple_udp_sendto(&udp_conn, buf, i == 2 * M / 128 ? 2 * M % 128 : 128, &dest_ipaddr);
+//     }
+//     // } else {
+//     //   LOG_INFO("Not reachable yet\n");
+//     // }
+//     ctimer_reset(&timer);
+// }
 
 PROCESS_THREAD(comp_sensing, ev, data)
 {
     // PROCESS_EXITHANDLER(unicast_close(&uc);)
     /* Declare variables required */
-    static int16_t signal_bytes[M] = {0};
+    // static int16_t signal_bytes[M] = {0};
     static const int16_t sensor_data[N_CS] = {0, 242, 242, 242, 242, 242, 242, 242, 242, 243, 243, 244, 243, 243, 243, 244, 245, 246, 246,
                                               246, 246, 245, 244, 244, 244, 243, 243, 242, 241, 242, 242, 241, 241, 240, 240, 239, 239,
                                               238, 238, 238, 239, 240, 240, 240, 241, 241, 241, 240, 241, 241, 241, 241, 241, 241, 241,
@@ -64,7 +99,14 @@ PROCESS_THREAD(comp_sensing, ev, data)
                                               284, 295, 305, 313, 317, 316, 307, 293, 272, 249, 224, 203, 189, 184, 188, 197, 208, 219,
                                               227, 233, 238, 240, 240, 241, 240, 240, 240, 240, 241, 242, 243, 243, 243, 243, 243, 243,
                                               243, 243, 244, 245, 246, 247, 247, 248, 248, 248, 247, 247, 247, 247, 247, 247, 248, 248,
-                                              248};
+                                              248, 247, 247, 247, 247, 247, 246, 247, 247, 247, 248, 248, 248, 248, 249, 249, 249, 250,
+                                              250, 251, 252, 253, 254, 256, 257, 258, 259, 259, 260, 260, 261, 261, 262, 262, 263, 264,
+                                              264, 265, 264, 264, 263, 263, 262, 263, 262, 261, 261, 260, 259, 258, 257, 255, 254, 252,
+                                              251, 250, 249, 249, 248, 247, 247, 246, 245, 245, 244, 243, 242, 242, 242, 241, 241, 242,
+                                              242, 242, 241, 241, 241, 241, 240, 240, 240, 241, 241, 242, 242, 242, 242, 242, 242, 241,
+                                              242, 242, 242, 243, 242, 243, 243, 243, 244, 243, 242, 242, 243, 242, 243, 243, 243, 243,
+                                              243, 243, 242, 242, 242, 242, 242, 241, 241, 241, 241, 241, 241, 242, 241, 240, 240, 240,
+                                              239, 238, 239};
 
     // static const int16_t somedata[51] = {0, 103, 197, 278, 337, 372, 380, 363, 325, 271, 207, 141, 81, 33,
     //                                  4, -4, 12, 48, 103, 170, 243, 313, 374, 418, 440, 437, 406, 350,
@@ -72,8 +114,10 @@ PROCESS_THREAD(comp_sensing, ev, data)
     //                                  -36, 5, 27, 28, 5, -38, -101, -175, 0};
     PROCESS_BEGIN();
 
-    static struct etimer periodic_timer;
-    uip_ipaddr_t dest_ipaddr;
+    NETSTACK_RADIO.off();
+
+    // static struct etimer periodic_timer;
+    // uip_ipaddr_t dest_ipaddr;
     // const uint32_t vec[100] = {1923, 1923, 1925, 1929, 1931, 1929, 1925, 1929, 1931, 1933, 1931, 1929, 1933, 1931,
     //                      1939, 1939, 1939, 1939, 1939, 1935, 1933, 1937, 1939, 1941, 1945, 1953, 1966, 1982,
     //                      2017, 2060, 2119, 2193, 2277, 2361, 2441, 2508, 2537, 2529, 2459, 2344, 2181, 1992,
@@ -93,8 +137,8 @@ PROCESS_THREAD(comp_sensing, ev, data)
     //                      1986, 0};
 
     // Predefine return vector, and data vector :
-    static Vector_M ret;
-    static Vector vec;
+
+    // static uint8_t mybool = 1;
 
     int i;
     for (i = 0; i < N_CS; i++)
@@ -132,48 +176,97 @@ PROCESS_THREAD(comp_sensing, ev, data)
     // }
 
     // b.full = 144787;
-   
-            EC.ec_transform(&vec, &ret);
+    // etimer_set(&periodic_timer, 5 * CLOCK_SECOND);
+    // PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+
+    // LOG_INFO_("hello\n");
+
+    EC.ec_transform(&vec, &ret);
+
+    // LOG_INFO_("hello\n");
+    // etimer_set(&periodic_timer, 5 * CLOCK_SECOND);
+    // PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
 #if DEBUG
     EC.pprint(&ret);
 #endif
 
-    cc2420_set_txpower(31);
+    // for (i = 0; i < M; i++)
+    // {
+    //     signal_bytes[i] = ret.data[i];
+    // }
+    // cc2420_set_txpower(31);
 
-    for (i = 0; i < M; i++)
-    {
-        signal_bytes[i] = ret.data[i];
-    }
+    // NETSTACK_RADIO.on();
 
     /* Transmission code */
     simple_udp_register(&udp_conn, UDP_CLIENT_PORT, NULL,
                         UDP_SERVER_PORT, NULL);
 
-    etimer_set(&periodic_timer, SEND_INTERVAL);
-    while (1)
+
+    for (i = 0; i < M * 2; i += 2)
     {
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-
-
-        NETSTACK_RADIO.on();
-        if (NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr))
-        {
-            /* Send to DAG root */
-            simple_udp_sendto(&udp_conn, signal_bytes, M * 2, &dest_ipaddr);
-        }
-        else
-        {
-            LOG_INFO("Not reachable yet\n");
-        }
-        /* Add some jitter */
-        // EC.ec_transform(&vec, &ret);
-
-        etimer_set(&periodic_timer, 4* CLOCK_SECOND);
-        PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-
-        etimer_set(&periodic_timer, SEND_INTERVAL);
-        NETSTACK_RADIO.off();
+        signal_bytes[i + 0] = (uint8_t)((ret.data[i >> 1] & 0xFF00) >> 8);
+        signal_bytes[i + 1] = (uint8_t)((ret.data[i >> 1] & 0x00FF) >> 0);
     }
+
+    NETSTACK_RADIO.on();
+    uint8_t buf[128] = {0};
+#if DEBUG
+    LOG_INFO("Sending to receiver mote\n");
+#endif
+    for (i = 0; i <= 2*M / 128; i++)
+    {
+        memset(buf, 0, 128);
+        memcpy(buf, signal_bytes + (i * 128), i == 2*M / 128 ? 2*M % 128 : 128);
+        simple_udp_sendto(&udp_conn, buf, i == 2*M / 128 ? 2*M % 128 : 128, &dest_ipaddr);
+    }
+    NETSTACK_RADIO.off();
+
+    // ctimer_set(&timer, 5 * CLOCK_SECOND, callback, NULL);
+
+    // etimer_set(&periodic_timer, SEND_INTERVAL);
+    // while (1)
+    // {
+    //     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+    //     LOG_INFO("Radio on!\n");
+    //     NETSTACK_RADIO.on();
+
+    //     // if (mybool)
+    //     // {
+    //     //     EC.ec_transform(&vec, &ret);
+    //     //     EC.pprint(&ret);
+
+    //     //     for (i = 0; i < M; i++)
+    //     //     {
+    //     //         signal_bytes[i] = ret.data[i];
+    //     //     }
+
+    //     //     mybool = 0;
+    //     // }
+
+    //     if (NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr))
+    //     {
+    //         /* Send to DAG root */
+    //         LOG_INFO("Sending!\n");
+    //         simple_udp_sendto(&udp_conn, signal_bytes, M * 2, &dest_ipaddr);
+
+    //         LOG_INFO("Shuting off radio!\n");
+    //         NETSTACK_RADIO.off();
+    //         // mybool = 1;
+    //         // etimer_set(&periodic_timer, SEND_INTERVAL);
+    //     }
+    //     else
+    //     {
+    //         LOG_INFO("Not reachable yet\n");
+    //     }
+
+    //     etimer_reset(&periodic_timer);
+    //     /* Add some jitter */
+    //     // EC.ec_transform(&vec, &ret);
+
+    //     // etimer_set(&periodic_timer, 4* CLOCK_SECOND);
+    //     // PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
+    // }
 
     // printf("DONE\n\n");
     // unicast_open(&uc, 146, &unicast_callbacks);

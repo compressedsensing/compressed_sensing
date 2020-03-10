@@ -26,7 +26,7 @@ struct linalg_driver
   /**
    * \brief Defines the inner product of a matrix with a Vector
    */
-  void (*multiply_sensing_matrix)(Vector *signal, Vector_M *result);
+  void (*multiply_sensing_matrix)(const Vector *signal, Vector_M *result);
 
   /* Helper functions*/
   void (*print_vector)(Vector *vec);
