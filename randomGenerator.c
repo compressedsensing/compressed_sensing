@@ -8,24 +8,14 @@
 struct LFSR
 {
     uint16_t state;
-    uint16_t polynomiel;
 };
 
-typedef struct LFSR LFSR;
+typedef struct NLFSR_struct
+{
+    uint8_t state;
+} NLFSR;
 
-/**
- * @brief Reverses the order of bits in a 2 Bytes
- * @param b Bit to be inverted
- * @return Reverse bits of input 
- */
-// uint16_t reverse_bits16(uint16_t b)
-// {
-//     b = (b & 0xFF00) >> 8 | (b & 0x00FF) << 8;
-//     b = (b & 0xF0F0) >> 4 | (b & 0x0F0F) << 4;
-//     b = (b & 0xCCCC) >> 2 | (b & 0x3333) << 2;
-//     b = (b & 0xAAAA) >> 1 | (b & 0x5555) << 1;
-//     return b;
-// }
+typedef struct LFSR LFSR;
 
 /**
  * @brief Get the next bit in an LFSR register sequence, given a LFSR register
@@ -42,27 +32,18 @@ static uint8_t getLFSR_bit(struct LFSR *reg)
     reg->state = (reg->state >> 1) | (bit << 15);
 
     return output;
+}
 
-    // uint16_t cs,cp, nbit;
-    // int i = 0;
+static uint8_t getNLSFR(NLFSR *reg)
+{
 
-    // cs = reg->state;
-
-    // // nbit = reverse_bits16(cs & reg->polynomiel);
-    // cp = nbit = reverse_bits16(cs & reg->polynomiel);
-
-    // for (i = 1; i < 16; i++)
-    // {
-    //     /* xor all bits together */
-    //     nbit ^= (cp >> i);
-    // }
-
-    // reg->state = (cs >> 1) | (nbit << 15); /*  rotate in new bit */
-
-
-    // return cs & 0x01;
-
-    // return 0x01;
+    uint8_t bit;
+    uint8_t output;
+    output = reg->state & 0x01;
+    bit = ((reg->state >> 0) ^ (reg->state >> 3) ^ (((reg->state >> 2) & (reg->state >> 4))));
+    
+    reg->state = (reg->state >> 1) | (bit << 7);
+    return output;
 }
 
 /**
@@ -81,10 +62,11 @@ static int16_t converter(uint16_t input)
     return 1;
 }
 
-static struct LFSR gen[L] =
-    {{0b1010100011000100, 0b0000000000101101},
-     {0b1010111001011011, 0b0000000000101101},
-     {0b1010101010001010, 0b0000000000101101}};
+static struct LFSR gen[L-1] =
+    {{0b1010100011000100},
+     {0b1010111001011011}};
+
+static NLFSR ngen = {0b11101010};
 
 /**
  * @brief Method to generate a random number, from a pseudorandom generator
@@ -98,11 +80,13 @@ static int16_t get_random_number()
     do
     {
         sum = 0;
-        for (j = 0; j < L; j++)
+        for (j = 0; j < L-1; j++)
         {
             sum += converter(getLFSR_bit(&gen[j]));
-            // sum += getLFSR_bit(&gen[j]);
         }
+        /* Draw a single NLFSR bit */
+        sum += converter(getNLSFR(&ngen));
+
     } while (sum == L || sum == -L);
 
     return sum;
