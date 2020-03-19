@@ -45,7 +45,8 @@ void ec_transform(Vector *signal, Vector_M *result)
     // printf("Actual C value %.2f\n\n",FP.fixed_to_float16((int16_t)(c >> 8)));
 
     aug_signal.data[0] = (int16_t)(c >> 8);
-    // aug_signal.data[0] = FP.float_to_fixed16(9.12);
+    // aug_signal.data[0] = FP.float_to_fixed16(1.12);
+    // aug_signal.data[0] = 12;
     for (i = 1; i < N_CS; i++)
     {
         aug_signal.data[i] = signal->data[i - 1];

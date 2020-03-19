@@ -18,9 +18,16 @@ static void multiply_sensing_matrix(const Vector *signal, Vector_M *result)
         sum = 0;
         for (i = 0; i < N_CS; i++)
         {
-            sum += RANDOM.get_random_number() * signal->data[i];
+            sum += RANDOM.get_random_number() * (signal->data[i] >> 2);
+            // sum += FP.fp_multiply(RANDOM.get_random_number(),signal->data[i]);
+            // printf("%04x, sum");
         }
+        // if(sum > INT16_MAX)
+        // {
         // printf("\n\n");
+        //    printf("WE HAVE A PROBLEM!");    
+        // printf("\n\n");
+        // }
         result->data[j] = sum;
     }
 }

@@ -1,7 +1,7 @@
 #ifndef CS_CONF_H_
 #define CS_CONF_H_
 
-#define M 250
+#define M 260
 #define N_CS 512
 #define EMAX 400
 #ifndef LOG_MODULE

@@ -29,6 +29,7 @@ static uint8_t getLFSR_bit(struct LFSR *reg)
     uint8_t output;
 
     output = reg->state & 0x00FF;
+    // output = reg->state & 0x01;
     // output = reg->state;
 
     for (i = 0; i < 8; i++)
@@ -47,6 +48,7 @@ static uint8_t getNLSFR(NLFSR *reg)
     uint8_t output;
 
     output = reg->state;
+    // output = reg->state & 0x01;
     for (i = 0; i < 8; i++)
     {
         bit = ((reg->state >> 0) ^ (reg->state >> 3) ^ (((reg->state >> 2) & (reg->state >> 4))));
@@ -83,7 +85,7 @@ static NLFSR ngen = {0b11101010};
  * @return Returns a random number drawn from an LFSR sequence
  */
 static uint8_t iter = 0;
-static uint16_t fsr_vals[3];
+static uint8_t fsr_vals[3];
 static const int16_t lookup[4] = {0, -1, 1, 0};
 // static unsigned long wrong = 0;
 
@@ -109,10 +111,12 @@ static int16_t get_random_number()
         // printf("%d\n", sum);
         sum = fsr_vals[0] & 1;
         sum += fsr_vals[1] & 1;
+        sum += fsr_vals[2] & 1;
         // sum += (fsr_vals[2] << iter) & 1;
 
         fsr_vals[0] >>= 1;
         fsr_vals[1] >>= 1;
+        fsr_vals[2] >>= 1;
 
 
         iter = (iter + 1) % 8;
@@ -149,7 +153,7 @@ static int16_t get_random_number()
 
     // }
 
-    /* Draw a single NLFSR bit */
+    // /* Draw a single NLFSR bit */
     // sum += converter(getNLSFR(&ngen));
 
     // } while (sum == L || sum == -L);
