@@ -3,7 +3,7 @@
 
 #define M 300
 #define N_CS 512
-#define EMAX 600
+#define EMAX 900
 #ifndef LOG_MODULE
 #define LOG_MODULE "compressed_sensing"
 #define LOG_LEVEL LOG_LEVEL_INFO
