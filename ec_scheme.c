@@ -19,20 +19,26 @@ void ec_transform(Vector *signal, Vector_M *result)
     LOG_INFO("PowerLoop\n\n");
     for (i = 1; i < N_CS; i++)
     {
-        hep = FP.fp_pow(signal->data[i], 2);
+        hep = FP.fp_pow(signal->data[i] >> 2, 2);
 
         c += (int32_t)hep << 8;
+
+
     }
     LOG_INFO("\nPowerLoop_done\n\n");
     int32_t e_max;
-    e_max = 0x00c80000 << 1;
+    // printf("%2f\t",FP.fixed_to_float32(c));
+    e_max = 0x03840000;
     // printf("e_maks : %08x \n\n",e_max);
     // FP.fixed_to_float16()
 
-    // e_max = FP.float_to_fixed32(EMAX);
+    // e_max = FP.float_to_fixed32(900);
+    // printf("\nE: %2f\t\n",FP.fixed_to_float32(e_max));
+    // printf("\nE: %08x\t\n",e_max);
     c = e_max - c;
+    // printf("\nC srt: %2f\t\n",FP.fixed_to_float32(c));
+    
     c = FP.fp_sqrt(c, 20);
-    // printf("%2f\t",FP.fixed_to_float(c));
 
     // c <<= 1;
     // printf("\nC: %2f\t\n",FP.fixed_to_float32(c));
