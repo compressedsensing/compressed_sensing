@@ -33,16 +33,16 @@ static uint8_t getLFSR_bit(LFSR *reg)
         bit = ((reg->state >> 0) ^ (reg->state >> 2) ^ (reg->state >> 3) ^ (reg->state >> 5));
         
         /* Rotate in new bit (C)*/ 
-        // reg->state = (reg->state >> 1) | (bit << 15);
+        reg->state = (reg->state >> 1) | (bit << 15);
         
-        /* Rotate in new bit (assembly) - Sadly very little gain */ 
-        asm("AND #0x1, %1\n\t"      /* Bit &= 1u*/
-            "AND #0xFFFE, %0\n\t"   /* LFSR &= ~1u */
-            "BIS %1, %0\n\t"        /* Logical inclusive or */
-            "rrc %1\n\t"            /* Rotate bit into Carry bit*/
-            "rrc %0"                /* Rotate LFSR right*/
-            : "=r"(reg->state)            /* Outputs */
-            : "r"(bit), "0"(reg->state)); /* Inputs*/
+        // /* Rotate in new bit (assembly) - Sadly very little gain */ 
+        // asm("AND #0x1, %1\n\t"      /* Bit &= 1u*/
+        //     "AND #0xFFFE, %0\n\t"   /* LFSR &= ~1u */
+        //     "BIS %1, %0\n\t"        /* Logical inclusive or */
+        //     "rrc %1\n\t"            /* Rotate bit into Carry bit*/
+        //     "rrc %0"                /* Rotate LFSR right*/
+        //     : "=r"(reg->state)            /* Outputs */
+        //     : "r"(bit), "0"(reg->state)); /* Inputs*/
     }
 
     return output;

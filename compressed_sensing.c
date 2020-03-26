@@ -1,11 +1,9 @@
 
 #include "contiki.h"
-// #include "net/rime/rime.h"
 #include "fixedpoint.h"
 #include "./randomGenerator.h"
 #include "./linalg.h"
 #include "./ec_scheme.h"
-// #include <stddef.h>
 #include <stdio.h>
 #include "net/routing/routing.h"
 #include "net/netstack.h"
@@ -19,7 +17,7 @@
 
 static struct simple_udp_connection udp_conn;
 // static struct ctimer timer;
-static Vector_M ret;
+
 static uint8_t signal_bytes[M * 2] = {0};
 static uip_ipaddr_t dest_ipaddr = {{0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x12, 0x74, 0x00, 0x1a, 0x45, 0xa3, 0x30}};
 
@@ -28,10 +26,10 @@ AUTOSTART_PROCESSES(&comp_sensing);
 
 PROCESS_THREAD(comp_sensing, ev, data)
 {
-    // PROCESS_EXITHANDLER(unicast_close(&uc);)
+
     /* Declare variables required */
 
-    static Vector vec = {{939, 939, 940, 942, 943, 942, 940, 942, 943, 944, 943, 942, 944, 943,
+    static int16_t vec[N_CS] = {0, 939, 939, 940, 942, 943, 942, 940, 942, 943, 944, 943, 942, 944, 943,
                           947, 947, 947, 947, 947, 945, 944, 946, 947, 948, 950, 954, 960, 968,
                           985, 1006, 1035, 1071, 1112, 1153, 1192, 1225, 1239, 1235, 1201, 1145, 1065, 973,
                           877, 795, 739, 720, 737, 771, 814, 858, 890, 913, 930, 938, 941, 942,
@@ -67,7 +65,7 @@ PROCESS_THREAD(comp_sensing, ev, data)
                           949, 949, 948, 947, 948, 950, 951, 953, 952, 952, 949, 948, 946, 943,
                           941, 939, 940, 939, 941, 941, 939, 937, 936, 931, 931, 928, 931, 931,
                           932, 929, 931, 931, 932, 931, 931, 930, 933, 931, 933, 934, 935, 939,
-                          946, 949, 955, 957, 958, 961, 962, 962}};
+                          946, 949, 955, 957, 958, 961, 962};
 
     PROCESS_BEGIN();
 
@@ -75,20 +73,22 @@ PROCESS_THREAD(comp_sensing, ev, data)
     NETSTACK_RADIO.off();
 
     /* Test code */
-    EC.ec_transform(&vec, &ret);
+    EC.ec_transform(vec);
 
 #if DEBUG
-    EC.pprint(&ret);
+    EC.pprint(vec);
 #endif
 
     /* Transmission code */
     simple_udp_register(&udp_conn, UDP_CLIENT_PORT, NULL,
                         UDP_SERVER_PORT, NULL);
 
+
+    int16_t i;
     for (i = 0; i < M * 2; i += 2)
     {
-        signal_bytes[i + 0] = (uint8_t)((ret.data[i >> 1] & 0xFF00) >> 8);
-        signal_bytes[i + 1] = (uint8_t)((ret.data[i >> 1] & 0x00FF) >> 0);
+        signal_bytes[i + 0] = (uint8_t)((vec[i >> 1] & 0xFF00) >> 8);
+        signal_bytes[i + 1] = (uint8_t)((vec[i >> 1] & 0x00FF) >> 0);
     }
 
     NETSTACK_RADIO.on();
