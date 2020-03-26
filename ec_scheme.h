@@ -13,9 +13,9 @@
 
 struct energy_concealment_driver
 {
-    void (* ec_transform)(Vector* signal, Vector_M* result);
+    void (* ec_transform)(int16_t* signal);
     #if DEBUG
-    void (* pprint)(Vector_M* signal);
+    void (* pprint)(int16_t* signal);
     #endif
 };
 

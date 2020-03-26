@@ -1,12 +1,10 @@
 
 #include "contiki.h"
-// #include "net/rime/rime.h"
 #include "fixedpoint.h"
 #include "./randomGenerator.h"
 #include "./linalg.h"
 #include "./ec_scheme.h"
-// #include <stddef.h>
-// #include <stdio.h>
+#include <stdio.h>
 #include "net/routing/routing.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
@@ -19,194 +17,78 @@
 
 static struct simple_udp_connection udp_conn;
 // static struct ctimer timer;
-static Vector_M ret;
-static Vector vec;
-// static uint16_t i = 0;
+
 static uint8_t signal_bytes[M * 2] = {0};
 static uip_ipaddr_t dest_ipaddr = {{0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x12, 0x74, 0x00, 0x1a, 0x45, 0xa3, 0x30}};
 
 PROCESS(comp_sensing, "compressed");
 AUTOSTART_PROCESSES(&comp_sensing);
-// static void sent_uc(struct unicast_conn *c, int status, int num_tx)
-// {
-//     const linkaddr_t *dest = packetbuf_addr(PACKETBUF_ADDR_RECEIVER);
-//     if (linkaddr_cmp(dest, &linkaddr_null))
-//     {
-//         return;
-//     }
-//     printf("unicast message sent to %d.%d: status %d num_tx %d\n",
-//            dest->u8[0], dest->u8[1], status, num_tx);
-// }
-
-// static const struct unicast_callbacks unicast_callbacks = {sent_uc};
-// static struct unicast_conn uc;
-
-// static void
-// udp_rx_callback(struct simple_udp_connection *c,
-//                 const uip_ipaddr_t *sender_addr,
-//                 uint16_t sender_port,
-//                 const uip_ipaddr_t *receiver_addr,
-//                 uint16_t receiver_port,
-//                 const uint8_t *data,
-//                 uint16_t datalen)
-// {
-//     uint16_t i;
-//     for (i = 0; i < datalen; i++)
-//     {
-//         LOG_INFO_("%02x", data[i]);
-//     }
-//     LOG_INFO_("\n");
-// }
-
-// static void
-// callback(void *ptr)
-// {
-//     LOG_INFO("Starting transmission loop\n");
-//     LOG_INFO("Timer expired, check if receiver is reachable\n");
-//     // if (NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr)) {
-//     /* Send to DAG root */
-//     uint8_t buf[128] = {0};
-//     LOG_INFO("Sending to receiver mote\n");
-
-//     // Fixed point to bytes
-//     for (i = 0; i < M * 2; i += 2)
-//     {
-//         signal_bytes[i + 0] = (uint8_t)((ret.data[i >> 1] & 0xFF00) >> 8);
-//         signal_bytes[i + 1] = (uint8_t)((ret.data[i >> 1] & 0x00FF) >> 0);
-//     }
-
-//     for (i = 0; i <= 2 * M / 128; i++)
-//     {
-//         memset(buf, 0, 128);
-//         memcpy(buf, signal_bytes + (i * 128), i == 2 * M / 128 ? 2 * M % 128 : 128);
-//         simple_udp_sendto(&udp_conn, buf, i == 2 * M / 128 ? 2 * M % 128 : 128, &dest_ipaddr);
-//     }
-//     // } else {
-//     //   LOG_INFO("Not reachable yet\n");
-//     // }
-//     ctimer_reset(&timer);
-// }
 
 PROCESS_THREAD(comp_sensing, ev, data)
 {
-    // PROCESS_EXITHANDLER(unicast_close(&uc);)
-    /* Declare variables required */
-    // static int16_t signal_bytes[M] = {0};
-    static const int16_t sensor_data[N_CS] = {0, 242, 242, 242, 242, 242, 242, 242, 242, 243, 243, 244, 243, 243, 243, 244, 245, 246, 246,
-                                              246, 246, 245, 244, 244, 244, 243, 243, 242, 241, 242, 242, 241, 241, 240, 240, 239, 239,
-                                              238, 238, 238, 239, 240, 240, 240, 241, 241, 241, 240, 241, 241, 241, 241, 241, 241, 241,
-                                              242, 242, 242, 242, 242, 241, 241, 242, 242, 242, 243, 244, 245, 247, 252, 257, 264, 274,
-                                              284, 295, 305, 313, 317, 316, 307, 293, 272, 249, 224, 203, 189, 184, 188, 197, 208, 219,
-                                              227, 233, 238, 240, 240, 241, 240, 240, 240, 240, 241, 242, 243, 243, 243, 243, 243, 243,
-                                              243, 243, 244, 245, 246, 247, 247, 248, 248, 248, 247, 247, 247, 247, 247, 247, 248, 248,
-                                              248, 247, 247, 247, 247, 247, 246, 247, 247, 247, 248, 248, 248, 248, 249, 249, 249, 250,
-                                              250, 251, 252, 253, 254, 256, 257, 258, 259, 259, 260, 260, 261, 261, 262, 262, 263, 264,
-                                              264, 265, 264, 264, 263, 263, 262, 263, 262, 261, 261, 260, 259, 258, 257, 255, 254, 252,
-                                              251, 250, 249, 249, 248, 247, 247, 246, 245, 245, 244, 243, 242, 242, 242, 241, 241, 242,
-                                              242, 242, 241, 241, 241, 241, 240, 240, 240, 241, 241, 242, 242, 242, 242, 242, 242, 241,
-                                              242, 242, 242, 243, 242, 243, 243, 243, 244, 243, 242, 242, 243, 242, 243, 243, 243, 243,
-                                              243, 243, 242, 242, 242, 242, 242, 241, 241, 241, 241, 241, 241, 242, 241, 240, 240, 240,
-                                              239, 238, 239};
 
-    // static const int16_t somedata[51] = {0, 103, 197, 278, 337, 372, 380, 363, 325, 271, 207, 141, 81, 33,
-    //                                  4, -4, 12, 48, 103, 170, 243, 313, 374, 418, 440, 437, 406, 350,
-    //                                  273, 180, 79, -24, -118, -199, -259, -296, -306, -293, -258, -209, -150, -90,
-    //                                  -36, 5, 27, 28, 5, -38, -101, -175, 0};
+    /* Declare variables required */
+
+    static int16_t vec[N_CS] = {0, 939, 939, 940, 942, 943, 942, 940, 942, 943, 944, 943, 942, 944, 943,
+                          947, 947, 947, 947, 947, 945, 944, 946, 947, 948, 950, 954, 960, 968,
+                          985, 1006, 1035, 1071, 1112, 1153, 1192, 1225, 1239, 1235, 1201, 1145, 1065, 973,
+                          877, 795, 739, 720, 737, 771, 814, 858, 890, 913, 930, 938, 941, 942,
+                          940, 940, 938, 941, 944, 949, 950, 952, 952, 953, 952, 951, 951, 953,
+                          954, 958, 963, 967, 968, 972, 969, 970, 968, 968, 967, 968, 968, 968,
+                          970, 970, 969, 968, 967, 967, 966, 966, 964, 966, 965, 968, 969, 970,
+                          970, 970, 974, 974, 975, 979, 980, 982, 988, 992, 996, 1000, 1005, 1010,
+                          1012, 1012, 1016, 1019, 1020, 1023, 1025, 1027, 1030, 1034, 1035, 1036, 1034, 1032,
+                          1028, 1029, 1027, 1029, 1026, 1023, 1022, 1019, 1015, 1009, 1004, 999, 995, 987,
+                          984, 979, 976, 973, 971, 968, 966, 963, 959, 958, 954, 950, 947, 946,
+                          947, 945, 945, 946, 946, 946, 945, 944, 944, 942, 941, 939, 941, 942,
+                          944, 946, 948, 948, 949, 946, 947, 945, 946, 946, 948, 951, 948, 950,
+                          952, 951, 954, 951, 949, 949, 950, 949, 951, 951, 952, 951, 950, 950,
+                          949, 949, 949, 946, 946, 945, 945, 945, 945, 945, 945, 946, 943, 941,
+                          938, 938, 934, 933, 937, 938, 938, 940, 941, 941, 939, 937, 934, 933,
+                          932, 933, 932, 934, 935, 933, 935, 934, 933, 931, 934, 934, 935, 934,
+                          938, 941, 943, 946, 947, 950, 950, 953, 954, 955, 952, 952, 950, 949,
+                          945, 945, 946, 944, 944, 940, 938, 935, 931, 928, 927, 926, 926, 926,
+                          925, 922, 917, 917, 914, 914, 915, 913, 919, 921, 923, 926, 925, 925,
+                          922, 920, 918, 917, 916, 917, 918, 920, 921, 924, 924, 925, 923, 923,
+                          922, 922, 921, 921, 924, 928, 934, 947, 965, 992, 1020, 1063, 1105, 1149,
+                          1191, 1225, 1247, 1248, 1224, 1172, 1095, 999, 896, 796, 723, 684, 687, 720,
+                          768, 820, 864, 904, 924, 941, 944, 945, 944, 941, 939, 936, 941, 946,
+                          948, 953, 954, 957, 958, 959, 961, 966, 966, 970, 976, 978, 983, 987,
+                          989, 993, 996, 996, 997, 996, 997, 996, 997, 998, 999, 1001, 1002, 1002,
+                          1002, 1002, 1000, 1000, 1002, 1004, 1009, 1011, 1016, 1019, 1022, 1026, 1027, 1029,
+                          1030, 1033, 1035, 1040, 1045, 1048, 1051, 1054, 1057, 1056, 1055, 1056, 1058, 1058,
+                          1056, 1059, 1060, 1058, 1058, 1061, 1061, 1060, 1060, 1056, 1055, 1052, 1050, 1048,
+                          1046, 1041, 1040, 1033, 1032, 1030, 1022, 1014, 1009, 1001, 995, 989, 984, 983,
+                          980, 979, 976, 972, 967, 962, 957, 953, 951, 949, 948, 949, 948, 947,
+                          947, 946, 947, 943, 941, 942, 940, 941, 942, 940, 941, 944, 946, 944,
+                          944, 941, 942, 941, 941, 942, 943, 943, 946, 947, 949, 952, 952, 950,
+                          949, 949, 948, 947, 948, 950, 951, 953, 952, 952, 949, 948, 946, 943,
+                          941, 939, 940, 939, 941, 941, 939, 937, 936, 931, 931, 928, 931, 931,
+                          932, 929, 931, 931, 932, 931, 931, 930, 933, 931, 933, 934, 935, 939,
+                          946, 949, 955, 957, 958, 961, 962};
+
     PROCESS_BEGIN();
 
+    /* Turn radio off */
     NETSTACK_RADIO.off();
 
-    // static struct etimer periodic_timer;
-    // uip_ipaddr_t dest_ipaddr;
-    // const uint32_t vec[100] = {1923, 1923, 1925, 1929, 1931, 1929, 1925, 1929, 1931, 1933, 1931, 1929, 1933, 1931,
-    //                      1939, 1939, 1939, 1939, 1939, 1935, 1933, 1937, 1939, 1941, 1945, 1953, 1966, 1982,
-    //                      2017, 2060, 2119, 2193, 2277, 2361, 2441, 2508, 2537, 2529, 2459, 2344, 2181, 1992,
-    //                      1796, 1628, 1513, 1474, 1509, 1579, 1667, 1757, 1822, 1869, 1904, 1921, 1927, 1929,
-    //                      1925, 1925, 1921, 1927, 1933, 1943, 1945, 1949, 1949, 1951, 1949, 1947, 1947, 1951,
-    //                      1953, 1961, 1972, 1980, 1982, 1990, 1984, 1986, 1982, 1982, 1980, 1982, 1982, 1982,
-    //                      1986, 1986, 1984, 1982, 1980, 1980, 1978, 1978, 1974, 1978, 1976, 1982, 1984, 1986,
-    //                      1986, 0};
+    /* Test code */
+    EC.ec_transform(vec);
 
-    // const uint32_t vec1[100] = {1923, 1923, 1925, 1929, 1931, 1929, 1925, 1929, 1931, 1933, 1931, 1929, 1933, 1931,
-    //                      1939, 1939, 1939, 1939, 1939, 1935, 1933, 1937, 1939, 1941, 1945, 1953, 1966, 1982,
-    //                      2017, 2060, 2119, 2193, 2277, 2361, 2441, 2508, 2537, 2529, 2459, 2344, 2181, 1992,
-    //                      1796, 1628, 1513, 1474, 1509, 1579, 1667, 1757, 1822, 1869, 1904, 1921, 1927, 1929,
-    //                      1925, 1925, 1921, 1927, 1933, 1943, 1945, 1949, 1949, 1951, 1949, 1947, 1947, 1951,
-    //                      1953, 1961, 1972, 1980, 1982, 1990, 1984, 1986, 1982, 1982, 1980, 1982, 1982, 1982,
-    //                      1986, 1986, 1984, 1982, 1980, 1980, 1978, 1978, 1974, 1978, 1976, 1982, 1984, 1986,
-    //                      1986, 0};
-
-    // Predefine return vector, and data vector :
-
-    // static uint8_t mybool = 1;
-
-    int i;
-    for (i = 0; i < N_CS; i++)
-    {
-        vec.data[i] = sensor_data[i];
-        // printf("%.2f\t", FP.fixed_to_float16(vec.data[i]));
-        // vec.data[i].part.integer = data[i];
-        // vec.data[i].part.fraction = 0;
-    }
-
-    // FIXED11_21 a
-
-    // printf("\n");
-
-    // for (i = 0; i < 64; i++)
-    // {
-    //     RANDOM.get_random_number();
-    //     printf("%d\t", RANDOM.get_random_number());
-    // }
-
-    // printf("\n");
-
-    // LINALG.print_vector(&vec);
-
-    // LINALG.inner_product(&mat,&vec,&ret);
-
-    // LINALG.print_vector(&ret);
-
-    // FIXED11_21 a, b;
-    // int a = 0;
-    // while (1)
-    // {
-    //     // printf("%d\t",a);
-    //     a = 1;
-    // }
-
-    // b.full = 144787;
-    // etimer_set(&periodic_timer, 5 * CLOCK_SECOND);
-    // PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-
-    // LOG_INFO_("hello\n");
-
-    EC.ec_transform(&vec, &ret);
-
-    // LOG_INFO_("hello\n");
-    // etimer_set(&periodic_timer, 5 * CLOCK_SECOND);
-    // PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
 #if DEBUG
-    EC.pprint(&ret);
+    EC.pprint(vec);
 #endif
-
-    // for (i = 0; i < M; i++)
-    // {
-    //     signal_bytes[i] = ret.data[i];
-    // }
-    // cc2420_set_txpower(31);
-
-    // NETSTACK_RADIO.on();
 
     /* Transmission code */
     simple_udp_register(&udp_conn, UDP_CLIENT_PORT, NULL,
                         UDP_SERVER_PORT, NULL);
 
 
+    int16_t i;
     for (i = 0; i < M * 2; i += 2)
     {
-        signal_bytes[i + 0] = (uint8_t)((ret.data[i >> 1] & 0xFF00) >> 8);
-        signal_bytes[i + 1] = (uint8_t)((ret.data[i >> 1] & 0x00FF) >> 0);
+        signal_bytes[i + 0] = (uint8_t)((vec[i >> 1] & 0xFF00) >> 8);
+        signal_bytes[i + 1] = (uint8_t)((vec[i >> 1] & 0x00FF) >> 0);
     }
 
     NETSTACK_RADIO.on();
@@ -214,107 +96,13 @@ PROCESS_THREAD(comp_sensing, ev, data)
 #if DEBUG
     LOG_INFO("Sending to receiver mote\n");
 #endif
-    for (i = 0; i <= 2*M / 128; i++)
+    for (i = 0; i <= 2 * M / 128; i++)
     {
         memset(buf, 0, 128);
-        memcpy(buf, signal_bytes + (i * 128), i == 2*M / 128 ? 2*M % 128 : 128);
-        simple_udp_sendto(&udp_conn, buf, i == 2*M / 128 ? 2*M % 128 : 128, &dest_ipaddr);
+        memcpy(buf, signal_bytes + (i * 128), i == 2 * M / 128 ? 2 * M % 128 : 128);
+        simple_udp_sendto(&udp_conn, buf, i == 2 * M / 128 ? 2 * M % 128 : 128, &dest_ipaddr);
     }
     NETSTACK_RADIO.off();
 
-    // ctimer_set(&timer, 5 * CLOCK_SECOND, callback, NULL);
-
-    // etimer_set(&periodic_timer, SEND_INTERVAL);
-    // while (1)
-    // {
-    //     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-    //     LOG_INFO("Radio on!\n");
-    //     NETSTACK_RADIO.on();
-
-    //     // if (mybool)
-    //     // {
-    //     //     EC.ec_transform(&vec, &ret);
-    //     //     EC.pprint(&ret);
-
-    //     //     for (i = 0; i < M; i++)
-    //     //     {
-    //     //         signal_bytes[i] = ret.data[i];
-    //     //     }
-
-    //     //     mybool = 0;
-    //     // }
-
-    //     if (NETSTACK_ROUTING.node_is_reachable() && NETSTACK_ROUTING.get_root_ipaddr(&dest_ipaddr))
-    //     {
-    //         /* Send to DAG root */
-    //         LOG_INFO("Sending!\n");
-    //         simple_udp_sendto(&udp_conn, signal_bytes, M * 2, &dest_ipaddr);
-
-    //         LOG_INFO("Shuting off radio!\n");
-    //         NETSTACK_RADIO.off();
-    //         // mybool = 1;
-    //         // etimer_set(&periodic_timer, SEND_INTERVAL);
-    //     }
-    //     else
-    //     {
-    //         LOG_INFO("Not reachable yet\n");
-    //     }
-
-    //     etimer_reset(&periodic_timer);
-    //     /* Add some jitter */
-    //     // EC.ec_transform(&vec, &ret);
-
-    //     // etimer_set(&periodic_timer, 4* CLOCK_SECOND);
-    //     // PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-    // }
-
-    // printf("DONE\n\n");
-    // unicast_open(&uc, 146, &unicast_callbacks);
-
-    // // char a[3] = "";
-    // while (1)
-    // {
-    //     static struct etimer et;
-    //     linkaddr_t addr;
-
-    //     etimer_set(&et, CLOCK_SECOND);
-
-    //     PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&et));
-
-    //     packetbuf_copyfrom("ab", 2);
-    //     //KASPER IS 12
-    //     addr.u8[0] = 221;
-    //     addr.u8[1] = 159;
-    //     printf("Sending_data");
-    //     if (!linkaddr_cmp(&addr, &linkaddr_node_addr))
-    //     {
-    //         unicast_send(&uc, &addr);
-    //     }
-    // }
-
-    // printf("MyFixed: %2f\n", FP.fixed_to_float(b));
-    // a = FP.float_to_fixed(30.0);
-
-    // int16_t a = 0x0000e0b4;
-    // printf("VAR ! %.2f\n",FP.fixed_to_float16(a));
-    // printf("VAR ! %.2f\n",FP.fixed_to_float16(0xffffe0b4));
-    // printf("\n\n");
-    // EC.pprint(&ret);
-
-    // FIXED11_21 a,b,c;
-
-    // a = FP.float_to_fixed(500.0);
-    // printf("%.2f",FP.fixed_to_float(FP.fp_pow(a,2)));
-
-    // for (i = 0; i < 6; i++)
-    // {
-    //     printf("%d\t", RANDOM.get_random_number());
-    //     /* code */
-    // }
-
-    // printf("\n");
-
-    /* Process End */
-    // printf("helle!");
     PROCESS_END();
 }

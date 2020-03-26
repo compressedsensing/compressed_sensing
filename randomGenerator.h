@@ -12,7 +12,7 @@ struct random_driver
    * @brief Method to generate a random number, from a pseudorandom generator
    * @return Returns a random number drawn from an LFSR sequence
    */
-  int16_t (*get_random_number)();
+  int8_t (*get_random_number)();
 };
 
 extern const struct random_driver RANDOM;

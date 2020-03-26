@@ -7,18 +7,18 @@
 
 #define LINALG linalg_driver
 
-struct Vector
-{
-  int16_t data[N_CS];
-};
+// struct Vector
+// {
+//   int16_t data[N_CS];
+// };
 
-struct Vector_M
-{
-  int16_t data[M];
-};
+// struct Vector_M
+// {
+//   int16_t data[M];
+// };
 
-typedef struct Vector Vector;
-typedef struct Vector_M Vector_M;
+// typedef struct Vector Vector;
+// typedef struct Vector_M Vector_M;
 
 
 struct linalg_driver
@@ -26,10 +26,10 @@ struct linalg_driver
   /**
    * \brief Defines the inner product of a matrix with a Vector
    */
-  void (*multiply_sensing_matrix)(const Vector *signal, Vector_M *result);
+  void (*multiply_sensing_matrix)(int16_t *signal);
 
   /* Helper functions*/
-  void (*print_vector)(Vector *vec);
+  void (*print_vector)(int16_t *vec);
 };
 
 extern const struct linalg_driver LINALG;
