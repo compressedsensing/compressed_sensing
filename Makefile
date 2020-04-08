@@ -6,6 +6,7 @@ all: $(CONTIKI_PROJECT)
 
 PROJECT_SOURCEFILES += randomGenerator.c linalg.c fixedpoint.c ec_scheme.c
 UIP_CONF_IPV6=1
+CFLAGS+=-Wno-unused-variable
 
 #CONTIKI_WITH_RIME = 1
 include $(CONTIKI)/Makefile.include
