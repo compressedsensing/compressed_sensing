@@ -12,6 +12,7 @@ static void multiply_sensing_matrix(int16_t *signal)
 
     for (j = 0; j < M; j++)
     {
+        watchdog_periodic();
         sum = 0;
 
         for (i = 0; i < N_CS; i++)
