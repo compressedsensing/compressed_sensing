@@ -4,6 +4,10 @@
 #include <inttypes.h>
 
 #define RANDOM random_driver
+#define L 3
+
+typedef uint8_t NFSR;
+typedef uint16_t LFSR;
 
 struct random_driver
 {
