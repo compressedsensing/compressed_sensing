@@ -1,28 +1,28 @@
 #include "./linalg.h"
 
 /* For printf() */
-#include <stddef.h>
+// #include <stddef.h>
 #include <stdio.h>
 
 static void multiply_sensing_matrix(int16_t *signal)
 {
-    int16_t sum, i, j;
+    int16_t i, j;
 
     int16_t result[M] = {0};
 
-    for (j = 0; j < M; j++)
-    {
-        watchdog_periodic();
-        sum = 0;
-
-        for (i = 0; i < N_CS; i++)
-        {
-            sum += RANDOM.get_random_number() * (signal[i] >> 2);
-        }
-
-        result[j] = sum;
+    // Generate first column and base random matrix on that
+    int8_t basis[N_CS] = {0};
+    for (i = 0; i < N_CS; i++) {
+        basis[i] = RANDOM.get_random_number();
     }
 
+    for (i = 0; i < M; i++) {
+        // watchdog_periodic();
+        for (j = 0; j < N_CS; j++)
+        {
+            result[i] += basis[(i + j + i*j + i*3*j) % N_CS] * (signal[j] >> 2);
+        }
+    }
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));
     memcpy(signal, result, M * sizeof(int16_t));

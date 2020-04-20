@@ -1,8 +1,9 @@
 #ifndef CS_CONF_H_
 #define CS_CONF_H_
 
-#define M 70
-#define N_CS 128
+#define M 300
+#define BLOCK_LEN M*2
+#define N_CS 512
 #define SIGNAL_LEN N_CS
 #define EMAX 900
 #ifndef LOG_MODULE
@@ -16,7 +17,7 @@
 #endif
 
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 
 #ifndef NATIVE
