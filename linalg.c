@@ -6,34 +6,30 @@
 
 static void multiply_sensing_matrix(int16_t *signal)
 {
-    int16_t i, j;
+    uint16_t i, j, k = 1;
 
     int16_t result[M] = {0};
 
-    // Generate first two column and base random matrix on that
+    const uint8_t basis_vector_total = 8;
+
     int8_t basis[N_CS] = {0};
-    for (i = 0; i < N_CS; i++) {
-        basis[i] = RANDOM.get_random_number();
-        result[0] += basis[i] * (signal[i] >> 2);
+    uint16_t start = 0;
+
+    // Generate first two column and base random matrix on that
+    for (k = 1; k <= basis_vector_total; k++) {
+        for (i = 0; i < N_CS; i++) {
+            basis[i] = RANDOM.get_random_number();
+        }
+
+        for (i = start; i < k*(M / basis_vector_total); i++) {
+            // watchdog_periodic();
+            for (j = 0; j < N_CS; j++) {
+                result[i] += basis[(i*7 + j) % N_CS] * (signal[j] >> 2);
+            }
+        }
+        start = k*(M / basis_vector_total);
     }
 
-    for (i = 1; i < M / 2; i++) {
-        // watchdog_periodic();
-        for (j = 0; j < N_CS; j++)
-        {
-            result[i] += basis[(i + j + i*j + i*3*j) % N_CS] * (signal[j] >> 2);
-        }
-    }
-    for (i = 0; i < N_CS; i++) {
-        basis[i] = RANDOM.get_random_number();
-    }
-    for (i = M / 2; i < M; i++) {
-        // watchdog_periodic();
-        for (j = 0; j < N_CS; j++)
-        {
-            result[i] += basis[(i + j + i*j + i*3*j) % N_CS] * (signal[j] >> 2);
-        }
-    }
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));
     memcpy(signal, result, M * sizeof(int16_t));
