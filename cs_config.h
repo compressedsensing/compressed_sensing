@@ -1,7 +1,7 @@
 #ifndef CS_CONF_H_
 #define CS_CONF_H_
 
-#define M 304
+#define M 300
 #define BLOCK_LEN M*2
 #define N_CS 512
 #define SIGNAL_LEN N_CS

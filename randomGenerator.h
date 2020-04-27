@@ -6,8 +6,8 @@
 #define RANDOM random_driver
 #define L 3
 
-typedef uint8_t NFSR;
-typedef uint16_t LFSR;
+typedef uint16_t NFSR;
+typedef uint16_t LFSR[2];
 
 struct random_driver
 {
