@@ -6,11 +6,21 @@
 #define RANDOM random_driver
 #define L 3
 
-typedef union FSR
+typedef uint8_t FSR8_t;
+
+typedef uint16_t FSR16_t;
+
+typedef union FSR32_t
 {
   uint16_t state[2];
   uint32_t state32;
-} FSR;
+} FSR32_t;
+
+typedef union FSR64_t
+{
+  uint16_t state[4];
+  uint64_t state64;
+} FSR64_t;
 
 
 struct random_driver
