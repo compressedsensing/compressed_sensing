@@ -5,7 +5,7 @@
 #include "./randomGenerator.h"
 #include "./cs_config.h"
 
-#define BASIS_VECTOR_TOTAL 6
+#define BASIS_VECTOR_TOTAL 8
 
 #define LINALG linalg_driver
 
