@@ -7,7 +7,13 @@
 #define L 3
 
 typedef uint16_t NFSR;
-typedef uint16_t LFSR[2];
+
+typedef union LFSR
+{
+  uint16_t state[2];
+  uint32_t state32;
+} LFSR;
+
 
 struct random_driver
 {
