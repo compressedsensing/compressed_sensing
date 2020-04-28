@@ -7,7 +7,7 @@
  * @param reg pointer to a LFSR register
  * @return The next 
  */
-static uint8_t LFSR_bit(LFSR *reg)
+static uint8_t LFSR_bit(FSR *reg)
 {
     uint16_t bit;
     uint8_t output;
@@ -33,24 +33,29 @@ static uint8_t LFSR_bit(LFSR *reg)
     return output;
 }
 
-static uint8_t NFSR_bit(NFSR *reg)
+static uint8_t NFSR_bit(FSR *reg)
 {
     uint16_t bit;
     uint8_t output;
 
-    output = (*reg) & 0x01;
-    bit = (((*reg) >> 0) ^ ((*reg) >> 2) ^ ((*reg) >> 13) ^ ((((*reg) >> 2) & ((*reg) >> 3))));
-    (*reg) = ((*reg) >> 1) | (bit << 15);
+    // output = (*reg) & 0x01;
+    // bit = (((*reg) >> 0) ^ ((*reg) >> 2) ^ ((*reg) >> 13) ^ ((((*reg) >> 2) & ((*reg) >> 3))));
+    // (*reg) = ((*reg) >> 1) | (bit << 15);
+
+    output = reg->state[0] & 0x01;
+    bit = ((reg->state[0] >> 0) ^ (reg->state[0] >> 2) ^ (reg->state[0] >> 13) ^ (((reg->state[0] >> 2) & (reg->state[0] >> 3))));
+    reg->state32 >>= 1;
+    reg->state[1] |= (bit << 15);
 
     return output;
 }
 
-static LFSR lfsr[L - 1] = { 
+static FSR lfsr[L - 1] = { 
     { .state32 = 0b01110110100101010100111001010010 }, 
     { .state32 = 0b11010111010011111000111010110011 }
 };
 
-static NFSR nfsr = { 0b0101001110101001 };
+static FSR nfsr = { .state32 = 0b10010110010101010010001011101101 };
 
 static const int8_t converter[4] = {-1, -1, 1, 1};
 
