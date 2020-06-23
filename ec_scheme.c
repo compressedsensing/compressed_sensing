@@ -19,24 +19,16 @@ static const int8_t converter[4] = {-1, -1, 1, 1};
 
 int16_t generate_ec_variable(int16_t *signal)
 {
-    LOG_INFO("EC transform begun\n");
+    int16_t i;
+    int32_t c = 0;
 
-    /* Find energy concealment variable 'c' */
-    int16_t summing_variable, i;
-    int32_t c, e_max;
-    c = 0;
-
-    /* sum og xn^2*/
     for (i = 1; i < N_CS; i++)
     {
-        summing_variable = FP.fp_multiply(signal[i],signal[i]);
-
-        c += (int32_t)summing_variable << 8;
+        c += FP.fp_multiply(signal[i],signal[i]);
     }
-    
-    e_max = 0x0001;
 
-    c = e_max - c; 
+    c <<= 8;
+    c = EMAX - c; 
     
     c = FP.fp_sqrt(c, 20); /* 20 iterations */
 
@@ -76,7 +68,7 @@ void multiply_sensing_matrix(int16_t *signal)
             // Get NFSR bit
             output += nfsr & 0x01;
             bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
-            
+
             nfsr = (nfsr >> 1) | (bit8 << 7);
 
             result[m] += converter[output] * signal[n];
