@@ -8,8 +8,6 @@ static FSR64_t lfsr[L - 1] = {
 
 static FSR8_t nfsr = 0b10010110;
 
-static const int8_t converter[4] = {-1, -1, 1, 1};
-
 /**
  * @brief Does compressed sensing with a energy concealment scheme. 
  * @param signal The signal to compress. Should be length N-1
@@ -40,10 +38,10 @@ void multiply_sensing_matrix(int16_t *signal)
     // LFSR stuff
     uint16_t bit16;
     uint8_t bit8;
-    uint8_t output = 0;
+    uint8_t output[L] = { 0 };
 
     uint16_t m, n;
-    int16_t result[M] = {0};
+    int16_t result[M] = { 0 };
 
     // Generate first two column and base random matrix on that
     for (m = 0; m < M; m++)
@@ -52,26 +50,31 @@ void multiply_sensing_matrix(int16_t *signal)
         for (n = 0; n < N_CS; n++)
         {
             // Get first LFSR bit
-            output = lfsr[0].state[0] & 0x01;
+            output[0] = lfsr[0].state[0] & 0x01;
             bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
 
             lfsr[0].state64 >>= 1;
             lfsr[0].state[3] |= (bit16 << 15);
 
             // Get second LFSR bit
-            output += lfsr[1].state[0] & 0x01;
+            output[1] = lfsr[1].state[0] & 0x01;
             bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
 
             lfsr[1].state64 >>= 1;
             lfsr[1].state[3] |= (bit16 << 15);
 
             // Get NFSR bit
-            output += nfsr & 0x01;
+            output[2] = nfsr & 0x01;
             bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
 
             nfsr = (nfsr >> 1) | (bit8 << 7);
 
-            result[m] += converter[output] * signal[n];
+
+            if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
+                result[m] += signal[n];
+            } else {
+                result[m] -= signal[n];
+            }
         }
     }
 
