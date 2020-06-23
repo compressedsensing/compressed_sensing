@@ -1,4 +1,14 @@
 #include "ec_scheme.h"
+#include "./randomGenerator.h"
+
+static FSR64_t lfsr[L - 1] = { 
+    { .state64 = 0xa0aa3e11dff2ddaf  }, 
+    { .state64 = 0xe02df35627e20498  }
+};
+
+static FSR8_t nfsr = 0b10010110;
+
+static const int8_t converter[4] = {-1, -1, 1, 1};
 
 /**
  * @brief Does compressed sensing with a energy concealment scheme. 
@@ -6,7 +16,8 @@
  * @param result The result vector. Should be length M
  * @param length The length of the signal, with the c variable.
  */
-void ec_transform(int16_t *signal)
+
+int16_t generate_ec_variable(int16_t *signal)
 {
     LOG_INFO("EC transform begun\n");
 
@@ -18,48 +29,70 @@ void ec_transform(int16_t *signal)
     /* sum og xn^2*/
     for (i = 1; i < N_CS; i++)
     {
-        summing_variable = FP.fp_multiply(signal[i] >> 2,signal[i] >> 2);
+        summing_variable = FP.fp_multiply(signal[i],signal[i]);
 
         c += (int32_t)summing_variable << 8;
     }
     
-    e_max = 0x03840000; /* 900 */
+    e_max = 0x0001;
 
     c = e_max - c; 
     
     c = FP.fp_sqrt(c, 20); /* 20 iterations */
 
-    /* Add c to the signal */
-    signal[0] = (int16_t)(c >> 8);
-
-    /* Sensing matrix multiplication*/
-    LINALG.multiply_sensing_matrix(signal);
+    return (int16_t)(c >> 8);
 }
 
-/**
- * @brief Pretty prints the final output value for a signal
- * @param signal The signal to pprint
- * @param length Length of the signal
- */
-#if DEBUG
-void pprint(int16_t *signal)
+void multiply_sensing_matrix(int16_t *signal)
 {
-    int i;
-    printf("\n[");
-    for (i = 0; i < M; i++)
-    {
-#if FLOAT
-        printf("%.2f", FP.fixed_to_float16(signal[i]));
-#else
-        printf("%04x", (uint16_t)signal[i]);
-#endif
-    }
-    printf("]\n");
-}
-#endif
+    // LFSR stuff
+    uint16_t bit16;
+    uint8_t bit8;
+    uint8_t output = 0;
 
-#if DEBUG
-const struct energy_concealment_driver energy_concealment_driver = {ec_transform, pprint};
-#else 
+    uint16_t m, n;
+    int16_t result[M] = {0};
+
+    // Generate first two column and base random matrix on that
+    for (m = 0; m < M; m++)
+    {
+        result[m] = 0;
+        for (n = 0; n < N_CS; n++)
+        {
+            // Get first LFSR bit
+            output = lfsr[0].state[0] & 0x01;
+            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
+
+            lfsr[0].state64 >>= 1;
+            lfsr[0].state[3] |= (bit16 << 15);
+
+            // Get second LFSR bit
+            output += lfsr[1].state[0] & 0x01;
+            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
+
+            lfsr[1].state64 >>= 1;
+            lfsr[1].state[3] |= (bit16 << 15);
+
+            // Get NFSR bit
+            output += nfsr & 0x01;
+            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
+            
+            nfsr = (nfsr >> 1) | (bit8 << 7);
+
+            result[m] += converter[output] * signal[n];
+        }
+    }
+
+    /* Copy result into signal */
+    memset(signal, 0, N_CS * sizeof(int16_t));
+    memcpy(signal, result, M * sizeof(int16_t));
+}
+
+void ec_transform(int16_t *signal)
+{
+    signal[0] = generate_ec_variable(signal);
+    multiply_sensing_matrix(signal);
+}
+
+
 const struct energy_concealment_driver energy_concealment_driver = {ec_transform};
-#endif

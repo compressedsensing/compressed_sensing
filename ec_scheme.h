@@ -6,7 +6,6 @@
 #include "sys/log.h"
 
 #include "./fixedpoint.h"
-#include "./linalg.h"
 #include "./cs_config.h"
 
 #define EC energy_concealment_driver
@@ -14,9 +13,6 @@
 struct energy_concealment_driver
 {
     void (* ec_transform)(int16_t* signal);
-    #if DEBUG
-    void (* pprint)(int16_t* signal);
-    #endif
 };
 
 extern const struct energy_concealment_driver EC;

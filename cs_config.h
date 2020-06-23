@@ -8,8 +8,8 @@
 #define EMAX 900
 #ifndef LOG_MODULE
 #define LOG_MODULE "compressed_sensing"
-// #define LOG_LEVEL LOG_LEVEL_INFO
-#define LOG_LEVEL LOG_LEVEL_NONE
+#define LOG_LEVEL LOG_LEVEL_INFO
+// #define LOG_LEVEL LOG_LEVEL_NONE
 #endif
 
 #ifndef FLOAT
@@ -17,7 +17,7 @@
 #endif
 
 #ifndef DEBUG
-#define DEBUG 0
+#define DEBUG 1
 #endif
 
 #ifndef NATIVE
