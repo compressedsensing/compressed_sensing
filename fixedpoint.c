@@ -99,7 +99,9 @@ static int32_t float_to_fixed32(double input)
  */
 static int32_t fp_sqrt(int32_t a, int iterations)
 {
+    #if DEBUG
     LOG_INFO("SQRT called\n");
+    #endif
     int32_t result, inter;
 
     // Initial guess set to 10 
@@ -113,7 +115,9 @@ static int32_t fp_sqrt(int32_t a, int iterations)
         // LOG_INFO("\nresult: %.2f, inter: %.2f", fixed_to_float32(result), fixed_to_float32(inter));
         result -= fp_division32((fp_multiply32(result, result)- a), inter);
     }
+    #if DEBUG
     LOG_INFO("\nSQRT completed\n");
+    #endif
 
     return result;
 }
