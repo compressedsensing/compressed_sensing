@@ -39,41 +39,6 @@ static int32_t fp_division32(int32_t a, int32_t b)
     return (int32_t)result;
 }
 
-#if DEBUG && FLOAT
-static double fixed_to_float16(int16_t input)
-{
-    double res = 0;
-    res = ((double)input / (double)(1 << FPART));
-    return res;
-}
-
-static int16_t float_to_fixed16(double input)
-{
-    int16_t res;
-    res = (int16_t)(input * (1 << FPART));
-    return res;
-}
-
-/**
- * @brief Coverts a float(double) to a fixed_point double 
- * @param input The input float
- * @return  fixed point reprensentation of a float
- */
-static double fixed_to_float32(int32_t input)
-{
-    double res = 0;
-    res = ((double)input / (double)(1 << 16));
-    return res;
-}
-
-static int32_t float_to_fixed32(double input)
-{
-    int32_t res;
-    res = (int32_t)(input * (1 << 16));
-    return res;
-}
-#endif
-
 
 /**
  * @brief Newton algorithm implementation of sqrt
@@ -93,8 +58,4 @@ static int32_t fp_sqrt(int32_t a, int iterations)
     return result;
 }
 
-#if DEBUG && FLOAT
-const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_sqrt, fixed_to_float16,float_to_fixed16, fixed_to_float32,float_to_fixed32};
-#else
-const struct fixed_point_driver fixed_point_driver = {fp_multiply, fp_sqrt};
-#endif
+const struct fixed_point_driver fixed_point_driver = { fp_multiply, fp_sqrt };

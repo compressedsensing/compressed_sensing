@@ -1,5 +1,4 @@
-#include "ec_scheme.h"
-#include "./randomGenerator.h"
+#include "./ec_scheme.h"
 
 static FSR64_t lfsr[L - 1] = { 
     { .state64 = 0xa0aa3e11dff2ddaf  }, 
@@ -20,8 +19,7 @@ int16_t generate_ec_variable(int16_t *signal)
     int16_t i;
     int32_t c = 0;
 
-    for (i = 1; i < N_CS; i++)
-    {
+    for (i = 1; i < N_CS; i++) {
         c += FP.fp_multiply(signal[i],signal[i]);
     }
 
@@ -44,11 +42,9 @@ void multiply_sensing_matrix(int16_t *signal)
     int16_t result[M] = { 0 };
 
     // Generate first two column and base random matrix on that
-    for (m = 0; m < M; m++)
-    {
+    for (m = 0; m < M; m++) {
         result[m] = 0;
-        for (n = 0; n < N_CS; n++)
-        {
+        for (n = 0; n < N_CS; n++) {
             // Get first LFSR bit
             output[0] = lfsr[0].state[0] & 0x01;
             bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);

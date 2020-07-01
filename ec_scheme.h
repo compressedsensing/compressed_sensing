@@ -4,9 +4,9 @@
 #include "contiki.h"
 #include <stdio.h>
 #include "sys/log.h"
-
-#include "./fixedpoint.h"
 #include "./cs_config.h"
+#include "./fixedpoint.h"
+#include "./random_generator.h"
 
 #define EC energy_concealment_driver
 

@@ -1,16 +1,11 @@
 
 #include "contiki.h"
-#include "fixedpoint.h"
-#include "./randomGenerator.h"
-#include "./linalg.h"
-#include "./ec_scheme.h"
 #include "./cs_config.h"
+#include "./ec_scheme.h"
 #include <stdio.h>
 #include "net/routing/routing.h"
 #include "net/netstack.h"
 #include "net/ipv6/simple-udp.h"
-
-// #include "cc2420.h"
 
 #define UDP_CLIENT_PORT 8765
 #define UDP_SERVER_PORT 5678
@@ -48,7 +43,7 @@ PROCESS_THREAD(comp_sensing, ev, data)
 {
 
     /* Declare variables required */
-static int16_t signal[SIGNAL_LEN] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951, 954, 951, 951, 952,
+static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951, 954, 951, 951, 952,
   957, 959, 961, 962, 963, 962, 958, 955, 956, 954, 951, 952, 948, 945,
   946, 947, 945, 943, 940, 939, 936, 936, 933, 933, 933, 935, 939, 939,
   940, 942, 943, 942, 940, 942, 943, 944, 943, 942, 944, 943, 947, 947,
