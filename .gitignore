@@ -1,7 +1,13 @@
-/build
 /obj_xm1000
+/obj_native
+/build
 contiki-xm1000.a
 contiki-xm1000.map
-compressed_sensing.xm1000
-/obj_native
+contiki-native.a
+contiki-native.map
+*.xm1000
+*.native
+*.sky
 symbols.*
+*.ihex
+*.o
