@@ -188,7 +188,7 @@ uint32_t * enc_function()
             //fb1=((initialValue1[0])^(initialValue1[0]<<2)^(initialValue1[0]<<6)^(initialValue1[0]<<7))&0x8000;  
             // Another LFSR 
               // x^63+x^62+1
-              fb1=((initialValue1[0])^(initialValue1[0]<<1))&0x4000;
+              fb1=((initialValue1[3])^(initialValue1[3]>>1))&0x0001;
             initialValue1[3]=initialValue1[3]>>1; // shifting the value to the right 
             initialValue1[3]=(initialValue1[3])|((initialValue1[2]&0x0001)<<15); // Continueing the process shifting 
             initialValue1[2]=initialValue1[2]>>1; // shifting the value to the right 
@@ -196,7 +196,7 @@ uint32_t * enc_function()
             initialValue1[1]=initialValue1[1]>>1; // shifting the value to the right 
             initialValue1[1]=(initialValue1[1])|((initialValue1[0]&0x0001)<<15);
             initialValue1[0]=(initialValue1[0]>>1);
-            initialValue1[0]=initialValue1[0]|fb1; // Updating the feedback value in the end of LFSR 
+            initialValue1[0]=initialValue1[0]| (fb1 << 15); // Updating the feedback value in the end of LFSR 
             
             //printf("%u,",fb1>>15);  // fb1 contains either 0x8000 or 0x0000 therefore printed values are 0 or 32678. To get 0 and 1 fb1 has to be shifted 15 times 
 
@@ -213,7 +213,7 @@ uint32_t * enc_function()
      // New LFSR to increase Key size and period      
            //x^64+x^63+x^61+x^60+1
 
-            fb2=((initialValue2[0])^(initialValue2[0]<<1)^(initialValue2[0]<<3)^(initialValue2[0]<<4))&0x8000;
+            fb2=((initialValue2[3])^(initialValue2[3]>>1)^(initialValue2[3]>>3)^(initialValue2[3]>>4))&0x0001;
             
             // if ((initialValue2[0]&0x8000)==0x8000) //x^64
             // {
@@ -249,7 +249,7 @@ uint32_t * enc_function()
             initialValue2[1]=initialValue2[1]>>1;
             initialValue2[1]=(initialValue2[1])|((initialValue2[0]&0x0001)<<15);
             initialValue2[0]=initialValue2[0]>>1;
-            initialValue2[0]=(initialValue2[0])|fb2;
+            initialValue2[0]=(initialValue2[0])| (fb2 << 15);
 
             // //x^32 + x^23 + x^17 + x^16 + x^14 + x^10 + x^8 + x^7 + x^6 + x^5 + x^3 + 1
             // fb3=((initialValue3[0])^(initialValue3[0]<<9)^(initialValue3[0]<<15)^(initialValue3[1])^(initialValue3[1]<<2)^(initialValue3[1]<<6)^(initialValue3[1]<<8)^(initialValue3[1]<<9)^(initialValue3[1]<<10)^(initialValue3[1]<<11)^(initialValue3[1]<<13))&0x8000;
@@ -277,12 +277,14 @@ uint32_t * enc_function()
               //if((((fb3>>15)==0)&&((fb4>>15)==0))||(((fb3>>15)==1)&&((fb4>>15)==1)))
             
               
-                if(((fb1&0x4000)&&(fb2&0x8000))||((fb1&0x4000)&&(fb3&0x80))||((fb2&0x8000)&&(fb3&0x80)))
+                if(((fb1)&&(fb2))||((fb1)&&(fb3))||((fb2)&&(fb3)))
                 {
+                  // printf("%d\n", 1);
                 tx_measurement_buf[k]=tx_measurement_buf[k]+ECG_sig[i];
                 }
                 else
                 {
+                  // printf("%d\n", -1);
                 tx_measurement_buf[k]=tx_measurement_buf[k]-ECG_sig[i];
                 }
              
