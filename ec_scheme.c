@@ -16,19 +16,19 @@ static FSR8_t nfsr = 0b10010110;
 
 int16_t generate_ec_variable(int16_t *signal)
 {
-    int16_t i;
+    int16_t i, c_16;
     int32_t c = 0;
 
     for (i = 1; i < N_CS; i++) {
-        c += FP.fp_multiply(signal[i],signal[i]);
+        c += (int32_t) signal[i] * signal[i];
     }
 
-    c <<= 8;
-    c = EMAX - c; 
+    c = EMAX - c;
+    c_16 = c >> FPART;
     
-    c = FP.fp_sqrt(c, 20); /* 20 iterations */
+    c_16 = FP.fp_sqrt_fast(c_16);
 
-    return (int16_t)(c >> 8);
+    return c_16;
 }
 
 void multiply_sensing_matrix(int16_t *signal)

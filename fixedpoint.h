@@ -12,6 +12,7 @@ struct fixed_point_driver
 {
     int16_t(* fp_multiply)(int16_t a, int16_t b);
     int32_t(* fp_sqrt)(int32_t a,int iterations);
+    uint16_t(* fp_sqrt_fast)(uint16_t value);
 };
 
 
