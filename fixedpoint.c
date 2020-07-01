@@ -9,35 +9,19 @@
  */
 static int16_t fp_multiply(int16_t a, int16_t b)
 {
-    int16_t result;
+    int32_t result;
+    int16_t out;
 
-    result = (((int32_t)a * (int32_t)b) + (1 << (FPART - 1))) >> FPART;
-
-    #if DEBUG
-    if(result > INT16_MAX){
-        printf("a : %d, b : %d\n\n", a,b);
-        // printf();
-        printf("Possible Overflow Error");
-    }
-    #endif
-
-    return result;
+    result = (int32_t) a * b;
+    result = result >> FPART;
+    out = result;
+    return out;
 }
 
 static int32_t fp_multiply32(int32_t a, int32_t b)
 {
     int32_t result;
-
-    // Compute multiply
     result = (((int64_t)a * (int64_t)b) + (1 << (16 - 1))) >> 16;
-
-    // Saturate the result if over or under minimum value.
-    #if DEBUG
-    if(result > INT32_MAX){
-        printf("POSSIBLE OVERFLOW");
-        // tmp = tmp % 0x00010000;
-    }
-    #endif
 
     return result;
 }
@@ -99,22 +83,13 @@ static int32_t float_to_fixed32(double input)
  */
 static int32_t fp_sqrt(int32_t a, int iterations)
 {
-    LOG_INFO("SQRT called\n");
-    int32_t result, inter;
+    int32_t result = 0xa0000, inter;
+    uint8_t i;
 
-    // Initial guess set to 10 
-    result = 0xa0000;
-
-    int i;
-
-    for (i = 0; i < iterations; i++)
-    {
+    for (i = 0; i < iterations; i++) {
         inter = result << 1; /* *2 */
-        // LOG_INFO("\nresult: %.2f, inter: %.2f", fixed_to_float32(result), fixed_to_float32(inter));
         result -= fp_division32((fp_multiply32(result, result)- a), inter);
     }
-    LOG_INFO("\nSQRT completed\n");
-
     return result;
 }
 

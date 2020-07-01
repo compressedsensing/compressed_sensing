@@ -6,28 +6,25 @@
 
 static void multiply_sensing_matrix(int16_t *signal)
 {
-    uint16_t i, j, k = 1;
+    uint16_t i, j;
     int16_t result[M] = {0};
-    int8_t basis[N_CS] = {0};
-    uint16_t start = 0;
+    // int8_t basis[N_CS] = {0};
+    // uint16_t start = 0;
 
     #if DEBUG
     uint16_t time = clock_time();
     #endif
 
     // Generate first two column and base random matrix on that
-    for (k = 1; k <= BASIS_VECTOR_TOTAL; k++) {
-        for (i = 0; i < N_CS; i++) {
-            basis[i] = RANDOM.get_random_number();
-        }
+    for (j = 0; j < M; j++)
+    {
+        watchdog_periodic();
+        result[j] = 0;
 
-        for (i = start; i < k*(M / BASIS_VECTOR_TOTAL); i++) {
-            // watchdog_periodic();
-            for (j = 0; j < N_CS; j++) {
-                result[i] += basis[(i + j + i*j + i*3*j) % N_CS] * (signal[j] >> 2);
-            }
+        for (i = 0; i < N_CS; i++)
+        {
+            result[j] += RANDOM.get_random_number() * (signal[i] >> 2);
         }
-        start = k*(M / BASIS_VECTOR_TOTAL);
     }
 
     #if DEBUG
