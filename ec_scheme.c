@@ -40,8 +40,10 @@ void multiply_sensing_matrix(int16_t *signal)
     uint8_t output[L] = { 0 };
     int8_t basis[N_CS] = {0};
 
-    uint16_t m, n, alpha = 0;
+    int16_t m,n = 0;
+    uint16_t alpha = 0;
     int16_t result[M] = { 0 };
+    int32_t accumulator = 0;
 
     // Generate first row and base random matrix on that
     for (n = 0; n < N_CS; n++) {
@@ -106,13 +108,24 @@ void multiply_sensing_matrix(int16_t *signal)
             alpha += 1;
         }
 
+        accumulator = 0;
+
         for (n = 0; n < N_CS; n++) {
-            if (basis[((n - m) * alpha) % N_CS] & 0x80) {
-                result[m] -= signal[n];
+           
+            /* Calculate mod*/
+            int16_t ret = ((n - m) * alpha) % N_CS;
+            if(ret < 0)
+            {
+                ret += N_CS;
+            }
+           
+            if (basis[ret] & 0x80) {
+                accumulator -= signal[n];
             } else {
-                result[m] += signal[n];
+                accumulator += signal[n];
             }
         }
+        result[m] = (int16_t) accumulator >> 0; /* Change the Q-format */
     }
 
     // for (m = 0; m < M; m++) {
@@ -146,6 +159,12 @@ void multiply_sensing_matrix(int16_t *signal)
     //         }
     //     }
     // }
+
+    //   if (basis[((n - m) * alpha) % N_CS] & 0x80) {
+    //             accumulator -= signal[n];
+    //         } else {
+    //             accumulator += signal[n];
+    //         }
 
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));

@@ -4,7 +4,7 @@
 #define M 120
 #define BLOCK_LEN M*2
 #define N_CS 256
-#define EMAX 0x000f0000
+#define EMAX 0x000f0000 /* */
 #ifndef LOG_MODULE
 #define LOG_MODULE "compressed_sensing"
 #define LOG_LEVEL LOG_LEVEL_INFO
