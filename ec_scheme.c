@@ -36,15 +36,16 @@ void multiply_sensing_matrix(int16_t *signal)
     // LFSR stuff
     uint16_t bit16;
     uint8_t bit8;
+    uint8_t a;
     uint8_t output[L] = { 0 };
+    int8_t basis[N_CS] = {0};
 
-    uint16_t m, n;
+    uint16_t m, n, alpha = 0;
     int16_t result[M] = { 0 };
 
-    // Generate first two column and base random matrix on that
-    for (m = 0; m < M; m++) {
-        result[m] = 0;
-        for (n = 0; n < N_CS; n++) {
+    // Generate first row and base random matrix on that
+
+    for (n = 0; n < N_CS; n++) {
             // Get first LFSR bit
             output[0] = lfsr[0].state[0] & 0x01;
             bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
@@ -65,14 +66,85 @@ void multiply_sensing_matrix(int16_t *signal)
 
             nfsr = (nfsr >> 1) | (bit8 << 7);
 
-
             if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
-                result[m] += signal[n];
+                basis[n] = 1;
+                result[0] += signal[0];
             } else {
+                basis[n] = -1;
+                result[0] -= signal[0];
+            }
+    }
+
+    for (m = 1; m < M; m++) {
+        // Draw random alpha
+        for (a = 0; a < ALPHA_MAX; a++) {
+            // Get first LFSR bit
+            output[0] = lfsr[0].state[0] & 0x01;
+            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
+
+            lfsr[0].state64 >>= 1;
+            lfsr[0].state[3] |= (bit16 << 15);
+
+            // Get second LFSR bit
+            output[1] = lfsr[1].state[0] & 0x01;
+            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
+
+            lfsr[1].state64 >>= 1;
+            lfsr[1].state[3] |= (bit16 << 15);
+
+            // Get NFSR bit
+            output[2] = nfsr & 0x01;
+            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
+
+            nfsr = (nfsr >> 1) | (bit8 << 7);
+            alpha <<= a;
+            alpha |= (output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]);
+        }
+        // Make sure alpha is uneven
+        if (~(alpha & 0x0001)) {
+            alpha += 1;
+        }
+
+        for (n = 0; n < N_CS; n++) {
+            if (basis[((n - m) * alpha) % N_CS] & 0x80) {
                 result[m] -= signal[n];
+            } else {
+                result[m] += signal[n];
             }
         }
     }
+
+    // for (m = 0; m < M; m++) {
+    //     result[m] = 0;
+    //     for (n = 0; n < N_CS; n++) {
+    //         // Get first LFSR bit
+    //         output[0] = lfsr[0].state[0] & 0x01;
+    //         bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
+
+    //         lfsr[0].state64 >>= 1;
+    //         lfsr[0].state[3] |= (bit16 << 15);
+
+    //         // Get second LFSR bit
+    //         output[1] = lfsr[1].state[0] & 0x01;
+    //         bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
+
+    //         lfsr[1].state64 >>= 1;
+    //         lfsr[1].state[3] |= (bit16 << 15);
+
+    //         // Get NFSR bit
+    //         output[2] = nfsr & 0x01;
+    //         bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
+
+    //         nfsr = (nfsr >> 1) | (bit8 << 7);
+
+
+    //         if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
+    //             result[m] += signal[n];
+    //         } else {
+    //             result[m] -= signal[n];
+    //         }
+    //     }
+    // }
 
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));
