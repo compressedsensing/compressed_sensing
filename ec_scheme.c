@@ -76,6 +76,7 @@ void multiply_sensing_matrix(int16_t *signal)
 
     for (m = 1; m < M; m++) {
         // Draw random alpha
+        alpha = 0;
         for (a = 0; a < ALPHA_MAX; a++) {
             // Get first LFSR bit
             output[0] = lfsr[0].state[0] & 0x01;
@@ -96,11 +97,12 @@ void multiply_sensing_matrix(int16_t *signal)
             bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
 
             nfsr = (nfsr >> 1) | (bit8 << 7);
+
             alpha <<= 1;
             alpha |= (output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]);
         }
         // Make sure alpha is uneven
-        if (~(alpha & 0x0001)) {
+        if (!(alpha & 0x0001)) {
             alpha += 1;
         }
 
