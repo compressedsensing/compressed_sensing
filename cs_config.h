@@ -1,9 +1,9 @@
 #ifndef CS_CONF_H_
 #define CS_CONF_H_
 
-#define M 150
+#define M 300
 #define BLOCK_LEN M*2
-#define N_CS 256
+#define N_CS 512
 #define EMAX 0x000f0000 /* */
 #ifndef LOG_MODULE
 #define LOG_MODULE "compressed_sensing"
