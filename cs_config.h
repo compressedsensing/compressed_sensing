@@ -1,7 +1,7 @@
 #ifndef CS_CONF_H_
 #define CS_CONF_H_
 
-#define M 120
+#define M 150
 #define BLOCK_LEN M*2
 #define N_CS 256
 #define EMAX 0x000f0000 /* */

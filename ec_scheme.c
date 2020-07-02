@@ -41,9 +41,9 @@ void multiply_sensing_matrix(int16_t *signal)
     int8_t basis[N_CS] = {0};
 
     int16_t m,n = 0;
-    uint16_t alpha = 0;
+    int16_t modIndex;
+    int16_t alpha = 0;
     int16_t result[M] = { 0 };
-    int32_t accumulator = 0;
 
     // Generate first row and base random matrix on that
     for (n = 0; n < N_CS; n++) {
@@ -103,68 +103,68 @@ void multiply_sensing_matrix(int16_t *signal)
             alpha <<= 1;
             alpha |= (output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]);
         }
-        // Make sure alpha is uneven
+
+        // // Make sure alpha is odd
         if (!(alpha & 0x0001)) {
             alpha += 1;
         }
 
-        accumulator = 0;
-
-        for (n = 0; n < N_CS; n++) {
-           
-            /* Calculate mod*/
-            int16_t ret = ((n - m) * alpha) % N_CS;
-            if(ret < 0)
-            {
-                ret += N_CS;
+        for (n = BETA_BITS; n < N_CS; n++) {
+            modIndex = ((n - m) * alpha) % N_CS;
+            if(modIndex < 0) {
+                modIndex += N_CS;
             }
            
-            if (basis[ret] & 0x80) {
-                accumulator -= signal[n];
+            if (basis[modIndex] & 0x80) {
+                result[m] -= signal[n];
             } else {
-                accumulator += signal[n];
+                result[m] += signal[n];
             }
         }
-        result[m] = (int16_t) accumulator >> 0; /* Change the Q-format */
+
+        for (n = 0; n < BETA_BITS; n++) {
+            // Get first LFSR bit
+            output[0] = lfsr[0].state[0] & 0x01;
+            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
+
+            lfsr[0].state64 >>= 1;
+            lfsr[0].state[3] |= (bit16 << 15);
+
+            // Get second LFSR bit
+            output[1] = lfsr[1].state[0] & 0x01;
+            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
+
+            lfsr[1].state64 >>= 1;
+            lfsr[1].state[3] |= (bit16 << 15);
+
+            // Get NFSR bit
+            output[2] = nfsr & 0x01;
+            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
+
+            nfsr = (nfsr >> 1) | (bit8 << 7);
+
+            modIndex = ((n - m) * alpha) % N_CS;
+            if(modIndex < 0) {
+                modIndex += N_CS;
+            }
+
+            uint8_t positive = ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]));
+           
+            if (basis[modIndex] & 0x80) {
+                if (positive) {
+                    result[m] -= signal[n];
+                } else {
+                    result[m] += signal[n];
+                }
+            } else {
+                if (positive) {
+                    result[m] += signal[n];
+                } else {
+                    result[m] -= signal[n];
+                }
+            }
+        }
     }
-
-    // for (m = 0; m < M; m++) {
-    //     result[m] = 0;
-    //     for (n = 0; n < N_CS; n++) {
-    //         // Get first LFSR bit
-    //         output[0] = lfsr[0].state[0] & 0x01;
-    //         bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
-
-    //         lfsr[0].state64 >>= 1;
-    //         lfsr[0].state[3] |= (bit16 << 15);
-
-    //         // Get second LFSR bit
-    //         output[1] = lfsr[1].state[0] & 0x01;
-    //         bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
-
-    //         lfsr[1].state64 >>= 1;
-    //         lfsr[1].state[3] |= (bit16 << 15);
-
-    //         // Get NFSR bit
-    //         output[2] = nfsr & 0x01;
-    //         bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
-
-    //         nfsr = (nfsr >> 1) | (bit8 << 7);
-
-
-    //         if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
-    //             result[m] += signal[n];
-    //         } else {
-    //             result[m] -= signal[n];
-    //         }
-    //     }
-    // }
-
-    //   if (basis[((n - m) * alpha) % N_CS] & 0x80) {
-    //             accumulator -= signal[n];
-    //         } else {
-    //             accumulator += signal[n];
-    //         }
 
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));

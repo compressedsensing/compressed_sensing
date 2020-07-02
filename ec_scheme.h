@@ -31,7 +31,9 @@
                  + IS_REPRESENTIBLE_IN_D_BITS(16, N)    \
 ))
 
-#define ALPHA_MAX ILOG2(N_CS-1)
+// #define ALPHA_MAX ILOG2(N_CS-1)
+#define ALPHA_MAX 8
+#define BETA_BITS 64
 
 #define EC energy_concealment_driver
 
