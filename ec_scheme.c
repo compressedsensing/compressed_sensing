@@ -109,19 +109,6 @@ void multiply_sensing_matrix(int16_t *signal)
             alpha += 1;
         }
 
-        for (n = BETA_BITS; n < N_CS; n++) {
-            modIndex = ((n - m) * alpha) % N_CS;
-            if(modIndex < 0) {
-                modIndex += N_CS;
-            }
-           
-            if (basis[modIndex] & 0x80) {
-                result[m] -= signal[n];
-            } else {
-                result[m] += signal[n];
-            }
-        }
-
         for (n = 0; n < BETA_BITS; n++) {
             // Get first LFSR bit
             output[0] = lfsr[0].state[0] & 0x01;
@@ -163,6 +150,17 @@ void multiply_sensing_matrix(int16_t *signal)
                 } else {
                     result[m] -= signal[n];
                 }
+            }
+        }
+        for (n = BETA_BITS; n < N_CS; n++) {
+            modIndex = ((n - m) * alpha) % N_CS;
+            if(modIndex < 0) {
+                modIndex += N_CS;
+            }
+            if (basis[modIndex] & 0x80) {
+                result[m] -= signal[n];
+            } else {
+                result[m] += signal[n];
             }
         }
     }
