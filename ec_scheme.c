@@ -69,10 +69,10 @@ void multiply_sensing_matrix(int16_t *signal)
 
             if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
                 basis[n] = 1;
-                result[0] += signal[0];
+                result[0] += signal[n];
             } else {
                 basis[n] = -1;
-                result[0] -= signal[0];
+                result[0] -= signal[n];
             }
     }
 

@@ -5,8 +5,8 @@
 #include "sys/log.h"
 
 #define FP fixed_point_driver
-#define IPART 8
-#define FPART 8
+#define IPART 4
+#define FPART 12
 
 struct fixed_point_driver
 {
