@@ -135,21 +135,13 @@ void multiply_sensing_matrix(int16_t *signal)
                 modIndex += N_CS;
             }
 
-            uint8_t positive = ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]));
+            // uint8_t positive = ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]));
            
            // TODO: This logic can be shortened
-            if (basis[modIndex] & 0x80) {
-                if (positive) {
-                    result[m] -= signal[n];
-                } else {
-                    result[m] += signal[n];
-                }
+            if ((basis[modIndex] & 0x80 && 0x1) == ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]))) {
+                result[m] -= signal[n];
             } else {
-                if (positive) {
-                    result[m] += signal[n];
-                } else {
-                    result[m] -= signal[n];
-                }
+                result[m] += signal[n];
             }
         }
         for (n = BETA_BITS; n < N_CS; n++) {
