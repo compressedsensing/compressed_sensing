@@ -31,6 +31,36 @@
                  + IS_REPRESENTIBLE_IN_D_BITS(16, N)    \
 ))
 
+/**
+* @brief Macro defined to draw L random bits from L bernoulli distributed sequences, L=3
+* @param output An array of size L. Will contain the bits drawn from the sequences in output[0], output[1] and output[2] respectively 
+* @param lfsr An array of size L-1 of type FSR64_t containing the LFSRs
+* @param nfsr An NFSR of type FSR8_t
+* @param bit16 An empty uint16 variable to perform the state changes of the LFSRs
+* @param bit8 An empty uint8 variable to perform the state changes of the NFSR
+*/
+#define DRAW_RANDOM_BITS(output, lfsr, nfsr, bit16, bit8) ({                                                                              \
+            /* Get first LFSR bit */                                                                                        \
+            output[0] = lfsr[0].state[0] & 0x01;                                                                            \
+            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);  \
+                                                                                                                            \
+            lfsr[0].state64 >>= 1;                                                                                          \
+            lfsr[0].state[3] |= (bit16 << 15);                                                                              \
+                                                                                                                            \
+            /* Get second LFSR bit */                                                                                       \
+            output[1] = lfsr[1].state[0] & 0x01;                                                                            \
+            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);  \
+                                                                                                                            \
+            lfsr[1].state64 >>= 1;                                                                                          \
+            lfsr[1].state[3] |= (bit16 << 15);                                                                              \
+                                                                                                                            \
+            /* Get NFSR bit */                                                                                              \
+            output[2] = nfsr & 0x01;                                                                                        \
+            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));                                \
+                                                                                                                            \
+            nfsr = (nfsr >> 1) | (bit8 << 7);                                                                               \
+})                                                                                                                          \
+
 // #define ALPHA_MAX ILOG2(N_CS-1)
 #define ALPHA_MAX 8
 #define BETA_BITS 8

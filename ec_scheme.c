@@ -38,7 +38,7 @@ void multiply_sensing_matrix(int16_t *signal)
     uint8_t bit8;
     uint8_t a;
     uint8_t output[L] = { 0 };
-    int8_t basis[N_CS] = {0};
+    int8_t basis[N_CS] = { 0 };
 
     int16_t m,n = 0;
     int16_t modIndex;
@@ -47,31 +47,12 @@ void multiply_sensing_matrix(int16_t *signal)
 
     // Generate first row and base random matrix on that
     for (n = 0; n < N_CS; n++) {
-            // Get first LFSR bit
-            output[0] = lfsr[0].state[0] & 0x01;
-            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
-
-            lfsr[0].state64 >>= 1;
-            lfsr[0].state[3] |= (bit16 << 15);
-
-            // Get second LFSR bit
-            output[1] = lfsr[1].state[0] & 0x01;
-            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
-
-            lfsr[1].state64 >>= 1;
-            lfsr[1].state[3] |= (bit16 << 15);
-
-            // Get NFSR bit
-            output[2] = nfsr & 0x01;
-            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
-
-            nfsr = (nfsr >> 1) | (bit8 << 7);
-
+            DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
             if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
                 basis[n] = 1;
                 result[0] += signal[n];
             } else {
-                basis[n] = -1;
+                basis[n] = 0;
                 result[0] -= signal[n];
             }
     }
@@ -80,65 +61,27 @@ void multiply_sensing_matrix(int16_t *signal)
         // Draw random alpha
         alpha = 0;
         for (a = 0; a < ALPHA_MAX; a++) {
-            // Get first LFSR bit
-            output[0] = lfsr[0].state[0] & 0x01;
-            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
-
-            lfsr[0].state64 >>= 1;
-            lfsr[0].state[3] |= (bit16 << 15);
-
-            // Get second LFSR bit
-            output[1] = lfsr[1].state[0] & 0x01;
-            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
-
-            lfsr[1].state64 >>= 1;
-            lfsr[1].state[3] |= (bit16 << 15);
-
-            // Get NFSR bit
-            output[2] = nfsr & 0x01;
-            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
-
-            nfsr = (nfsr >> 1) | (bit8 << 7);
+            DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
 
             alpha <<= 1;
             alpha |= (output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]);
         }
 
-        // // Make sure alpha is odd
-        if (!(alpha & 0x0001)) {
+        // Make sure alpha is odd
+        if (!(alpha & 0x01)) {
             alpha += 1;
         }
 
         for (n = 0; n < BETA_BITS; n++) {
-            // Get first LFSR bit
-            output[0] = lfsr[0].state[0] & 0x01;
-            bit16 = (lfsr[0].state[0] >> 0) ^ (lfsr[0].state[0] >> 1) ^ (lfsr[0].state[0] >> 2) ^ (lfsr[0].state[0] >> 3);
-
-            lfsr[0].state64 >>= 1;
-            lfsr[0].state[3] |= (bit16 << 15);
-
-            // Get second LFSR bit
-            output[1] = lfsr[1].state[0] & 0x01;
-            bit16 = (lfsr[1].state[0] >> 0) ^ (lfsr[1].state[0] >> 1) ^ (lfsr[1].state[0] >> 2) ^ (lfsr[1].state[0] >> 3);
-
-            lfsr[1].state64 >>= 1;
-            lfsr[1].state[3] |= (bit16 << 15);
-
-            // Get NFSR bit
-            output[2] = nfsr & 0x01;
-            bit8 = ((nfsr >> 0) ^ (nfsr >> 1) ^ (nfsr >> 5) ^ (((nfsr>> 1) & (nfsr >> 5))));
-
-            nfsr = (nfsr >> 1) | (bit8 << 7);
+            DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
 
             modIndex = ((n - m) * alpha) % N_CS;
             if(modIndex < 0) {
                 modIndex += N_CS;
             }
 
-            // uint8_t positive = ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]));
-           
-           // TODO: This logic can be shortened
-            if ((basis[modIndex] & 0x80 && 0x1) == ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]))) {
+            // Flip first BETA_BITS depending on random number, to preserve DC
+            if (basis[modIndex] ^ ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]))) {
                 result[m] -= signal[n];
             } else {
                 result[m] += signal[n];
@@ -149,10 +92,10 @@ void multiply_sensing_matrix(int16_t *signal)
             if(modIndex < 0) {
                 modIndex += N_CS;
             }
-            if (basis[modIndex] & 0x80) {
-                result[m] -= signal[n];
-            } else {
+            if (basis[modIndex]) {
                 result[m] += signal[n];
+            } else {
+                result[m] -= signal[n];
             }
         }
     }
