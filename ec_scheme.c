@@ -58,19 +58,18 @@ void multiply_sensing_matrix(int16_t *signal)
     }
 
     for (m = 1; m < M; m++) {
-        // Draw random alpha
+        // Draw random alpha uniformly from the RNG
         alpha = 0;
-        for (a = 0; a < ALPHA_MAX; a++) {
+        for (a = 0; a < (ALPHA_MAX - 1); a++) {
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
 
             alpha <<= 1;
             alpha |= (output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]);
         }
 
-        // Make sure alpha is odd
-        if (!(alpha & 0x01)) {
-            alpha += 1;
-        }
+        // Handle last bit by or'ing 1 to make sure alpha is odd
+        alpha <<= 1;
+        alpha |= 1;
 
         for (n = 0; n < BETA_BITS; n++) {
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
