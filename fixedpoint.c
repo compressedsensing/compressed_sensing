@@ -58,4 +58,19 @@ static int32_t fp_sqrt(int32_t a, int iterations)
     return result;
 }
 
-const struct fixed_point_driver fixed_point_driver = { fp_multiply, fp_sqrt };
+static uint16_t fp_sqrt_fast(uint16_t value)
+{
+    uint16_t root = 0;
+    uint16_t bit;
+    for ( bit = 0x4000; bit > 0; bit >>= 2 ) {
+        uint16_t trial = root + bit;
+        root >>= 1;
+        if (trial <= value ) {
+            root += bit;
+            value -= trial;
+        }
+    }
+    return root;
+}
+
+const struct fixed_point_driver fixed_point_driver = { fp_multiply, fp_sqrt, fp_sqrt_fast };
