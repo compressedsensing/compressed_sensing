@@ -3,16 +3,13 @@
 #include "./cs_config.h"
 #include "./ec_scheme.h"
 #include <stdio.h>
-#include "sys/ctimer.h"
 #include "net/netstack.h"
 #include "net/nullnet/nullnet.h"
 
 // Max size of 802.15.4 MAC when all address information is used
 #define TX_BUFFER_SIZE 102
 
-static struct etimer periodic_timer;
 static uint16_t i = 0;
-static uint8_t state = 0;
 static uint8_t signal_bytes[BLOCK_LEN] = {0};
 
 static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951, 954, 951, 951, 952,
@@ -74,56 +71,47 @@ AUTOSTART_PROCESSES(&comp_sensing);
 
 PROCESS_THREAD(comp_sensing, ev, data)
 {
-  PROCESS_BEGIN();
-  NETSTACK_RADIO.off();
-  #if DEBUG
-  LOG_INFO_("Initial data:\n");
-  for (i = 0; i < N_CS; i++) {
-    LOG_INFO_("%04x", signal[i]);
-  }
-  LOG_INFO_("\n");
-  #endif
+    PROCESS_BEGIN();
 
-  etimer_set(&periodic_timer, 5 * CLOCK_SECOND);
+    // Turn radio off while processing data 
+    NETSTACK_RADIO.off();
 
-  while (1) {
-    PROCESS_WAIT_EVENT_UNTIL(etimer_expired(&periodic_timer));
-    switch (state) {
-      case 0:
-      {
-        // The signal needs to be scaled for big block sizes to prevent overflows
-        for (i = 0; i < N_CS; i++) {
-          signal[i] >>= 1;
-        }
-        ec_transform(signal);
-        #if DEBUG
-        LOG_INFO_("Transformed data:\n");
-        for (i = 0; i < M; i++) {
-          LOG_INFO_("%04x", signal[i]);
-        }
-        LOG_INFO_("\n");
-        #endif
-        break;
-      }
-      case 1:
-      {
-        for (i = 0; i < BLOCK_LEN; i += 2) {
-            signal_bytes[i + 0] = (uint8_t)((signal[i >> 1] & 0xFF00) >> 8);
-            signal_bytes[i + 1] = (uint8_t)((signal[i >> 1] & 0x00FF) >> 0);
-        }
-        NETSTACK_RADIO.on();
-        send_packets();
-        // First turn radio off when done with transmission
-        PROCESS_YIELD();
-        NETSTACK_RADIO.off();
-        break;
-      }
-      default:
-        break;
-      }
-      state++;
-      etimer_reset(&periodic_timer);
+    #if DEBUG
+    printf("Clock system time before Encryption: %u \n",(unsigned int)clock_time());
+    #endif
+
+    // ---------------------- TEST CODE -------------------------------------
+    // The signal needs to be scaled for big block sizes to prevent overflows
+    for (i = 0; i < N_CS; i++) {
+      signal[i] >>= 1;
+    }
+    ec_transform(signal);
+    // ----------------------------------------------------------------------
+
+    #if DEBUG
+    printf("Clock system time after Encryption: %u \n",(unsigned int)clock_time());
+    #endif
+
+    for (i = 0; i < BLOCK_LEN; i += 2)
+    {
+        signal_bytes[i + 0] = (uint8_t)((signal[i >> 1] & 0xFF00) >> 8);
+        signal_bytes[i + 1] = (uint8_t)((signal[i >> 1] & 0x00FF) >> 0);
     }
 
-  PROCESS_END();
+    #if DEBUG
+    LOG_INFO_("Byte data\n");
+    for (i = 0; i < BLOCK_LEN; i++)
+    {
+      LOG_INFO_("%02x", signal_bytes[i]);
+    }
+    LOG_INFO_("\n");
+    #endif
+
+    NETSTACK_RADIO.on();
+    send_packets();
+    // First turn radio off when done with transmission
+    PROCESS_YIELD();
+    NETSTACK_RADIO.off();
+
+    PROCESS_END();
 }

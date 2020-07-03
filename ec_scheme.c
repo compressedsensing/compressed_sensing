@@ -58,6 +58,7 @@ void multiply_sensing_matrix(int16_t *signal)
     }
 
     for (m = 1; m < M; m++) {
+        watchdog_periodic();
         // Draw random alpha uniformly from the RNG
         alpha = 0;
         for (a = 0; a < (ALPHA_MAX - 1); a++) {
