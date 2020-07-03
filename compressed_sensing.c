@@ -85,7 +85,7 @@ static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951,
     for (i = 0; i < N_CS; i++) {
       signal[i] >>= 1;
     }
-    EC.ec_transform(signal);
+    ec_transform(signal);
     // ----------------------------------------------------------------------
 
     #if DEBUG

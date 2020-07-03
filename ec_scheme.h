@@ -68,11 +68,6 @@
 
 #define EC energy_concealment_driver
 
-struct energy_concealment_driver
-{
-    void (* ec_transform)(int16_t* signal);
-};
-
-extern const struct energy_concealment_driver EC;
+void ec_transform(int16_t* signal);
 
 #endif /* EC_H_ */

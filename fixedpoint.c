@@ -7,7 +7,7 @@
  * @param b fixed number to be multiplied
  * @return result of the multiplication
  */
-static int16_t fp_multiply(int16_t a, int16_t b)
+int16_t fp_multiply(int16_t a, int16_t b)
 {
     int32_t result;
     int16_t out;
@@ -18,7 +18,7 @@ static int16_t fp_multiply(int16_t a, int16_t b)
     return out;
 }
 
-static int32_t fp_multiply32(int32_t a, int32_t b)
+int32_t fp_multiply32(int32_t a, int32_t b)
 {
     int32_t result;
     result = (((int64_t)a * (int64_t)b) + (1 << (16 - 1))) >> 16;
@@ -31,7 +31,7 @@ static int32_t fp_multiply32(int32_t a, int32_t b)
  * @param b denominator
  * @return a/b
  */
-static int32_t fp_division32(int32_t a, int32_t b)
+int32_t fp_division32(int32_t a, int32_t b)
 {
     int64_t result = 0;
 
@@ -46,7 +46,7 @@ static int32_t fp_division32(int32_t a, int32_t b)
  * @param iterations The number of iterations the newton method runs
  * @result sqrt of a
  */
-static int32_t fp_sqrt(int32_t a, int iterations)
+int32_t fp_sqrt(int32_t a, int iterations)
 {
     int32_t result = 0xa0000, inter;
     uint8_t i;
@@ -58,7 +58,7 @@ static int32_t fp_sqrt(int32_t a, int iterations)
     return result;
 }
 
-static uint16_t fp_sqrt_fast(uint16_t value)
+uint16_t fp_sqrt_fast(uint16_t value)
 {
     uint16_t root = 0;
     uint16_t bit;
@@ -72,5 +72,3 @@ static uint16_t fp_sqrt_fast(uint16_t value)
     }
     return root;
 }
-
-const struct fixed_point_driver fixed_point_driver = { fp_multiply, fp_sqrt, fp_sqrt_fast };

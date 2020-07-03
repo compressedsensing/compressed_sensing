@@ -26,7 +26,7 @@ int16_t generate_ec_variable(int16_t *signal)
     c = EMAX - c;
     c_16 = c >> FPART;
     
-    c_16 = FP.fp_sqrt_fast(c_16);
+    c_16 = fp_sqrt_fast(c_16);
 
     return c_16;
 }
@@ -109,6 +109,3 @@ void ec_transform(int16_t *signal)
     signal[0] = generate_ec_variable(signal);
     multiply_sensing_matrix(signal);
 }
-
-
-const struct energy_concealment_driver energy_concealment_driver = {ec_transform};
