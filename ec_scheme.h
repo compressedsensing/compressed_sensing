@@ -66,8 +66,6 @@
 #define ALPHA_MAX 8
 #define BETA_BITS 8
 
-#define EC energy_concealment_driver
-
 void ec_transform(int16_t* signal);
 
 #endif /* EC_H_ */
