@@ -3,6 +3,7 @@
 
 #include "contiki.h"
 #include <stdio.h>
+#include <string.h>
 #include "sys/log.h"
 #include "./cs_config.h"
 #include "./fixedpoint.h"

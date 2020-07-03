@@ -11,6 +11,9 @@
 // #define LOG_LEVEL LOG_LEVEL_NONE
 #endif
 
+// Utility macros
+#define CEIL_DIVIDE(x,y) ((x+y-1)/y) /* x -Input, y - Divisor*/
+
 #ifndef DEBUG
 #define DEBUG 1
 #endif

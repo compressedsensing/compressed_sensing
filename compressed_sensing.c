@@ -3,37 +3,28 @@
 #include "./cs_config.h"
 #include "./ec_scheme.h"
 #include <stdio.h>
-#include "net/routing/routing.h"
 #include "net/netstack.h"
-#include "net/ipv6/simple-udp.h"
+#include "net/nullnet/nullnet.h"
 
-#define UDP_CLIENT_PORT 8765
-#define UDP_SERVER_PORT 5678
-#define SEND_INTERVAL (10 * CLOCK_SECOND)
-
-static struct simple_udp_connection udp_conn;
-// static struct ctimer timer;
+// static linkaddr_t receiver = {{0x30, 0xa3, 0x45, 0x1a, 0x00, 0x74, 0x12, 0x00}};
 int16_t i;
-
 static uint8_t signal_bytes[BLOCK_LEN] = {0};
-static uip_ipaddr_t dest_ipaddr = {{0xfe, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x12, 0x74, 0x00, 0x1a, 0x45, 0xc9, 0x58}};
 
+// Max size of 802.15.4 MAC when all address information is used
+#define TX_BUFFER_SIZE 102
 
 static void send_packets() {
-  NETSTACK_RADIO.on();
-  static uint8_t buf[128] = {0};
-  // uint16_t j = 0;
+  static uint8_t buf[TX_BUFFER_SIZE] = {0};
+  nullnet_buf = buf;
   #if DEBUG
   LOG_INFO("Sending to receiver mote\n");
   #endif
-  for (i = 0; i <= (BLOCK_LEN / 128); i++) {
-    // LOG_INFO("%d\n", i == (BLOCK_LEN / 128) ? BLOCK_LEN % 128 : 128);
-    // LOG_INFO("%d\n", (i * 128));
-    memset(buf, 0, 128);
-    memcpy(buf, signal_bytes + (i * 128), i == (BLOCK_LEN / 128) ? BLOCK_LEN % 128 : 128);
-    simple_udp_sendto(&udp_conn, buf, i == (BLOCK_LEN / 128) ? BLOCK_LEN % 128 : 128, &dest_ipaddr);
+  for (i = 0; i < CEIL_DIVIDE(BLOCK_LEN,TX_BUFFER_SIZE); i++) {
+    memset(buf, 0, TX_BUFFER_SIZE);
+    memcpy(buf, signal_bytes + (i * TX_BUFFER_SIZE), i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE);
+    nullnet_len = i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE;
+    NETSTACK_NETWORK.output(NULL);
   }
-  NETSTACK_RADIO.off();
 }
 
 PROCESS(comp_sensing, "compressed");
@@ -82,22 +73,24 @@ static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951,
   948, 947, 948, 950, 951, 953, 952, 952 };
 
     PROCESS_BEGIN();
-
     /* Turn radio off */
     NETSTACK_RADIO.off();
 
-    /* Test code */
+    #if DEBUG
     printf("Clock system time before Encryption: %u \n",(unsigned int)clock_time());
+    #endif
+
+    // ---------------------- TEST CODE -------------------------------------
     // The signal needs to be scaled for big block sizes to prevent overflows
     for (i = 0; i < N_CS; i++) {
       signal[i] >>= 1;
     }
     EC.ec_transform(signal);
-    printf("Clock system time after Encryption: %u \n",(unsigned int)clock_time());
+    // ----------------------------------------------------------------------
 
-    /* Transmission code */
-    simple_udp_register(&udp_conn, UDP_CLIENT_PORT, NULL,
-                        UDP_SERVER_PORT, NULL);
+    #if DEBUG
+    printf("Clock system time after Encryption: %u \n",(unsigned int)clock_time());
+    #endif
 
     for (i = 0; i < BLOCK_LEN; i += 2)
     {
@@ -114,7 +107,11 @@ static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951,
     LOG_INFO_("\n");
     #endif
 
+    NETSTACK_RADIO.on();
     send_packets();
+    // First turn radio off when done with transmission
+    PROCESS_YIELD();
+    NETSTACK_RADIO.off();
 
     PROCESS_END();
 }
