@@ -6,34 +6,9 @@
 #include "net/netstack.h"
 #include "net/nullnet/nullnet.h"
 
-// static linkaddr_t receiver = {{0x30, 0xa3, 0x45, 0x1a, 0x00, 0x74, 0x12, 0x00}};
-int16_t i;
-static uint8_t signal_bytes[BLOCK_LEN] = {0};
-
 // Max size of 802.15.4 MAC when all address information is used
 #define TX_BUFFER_SIZE 102
 
-static void send_packets() {
-  static uint8_t buf[TX_BUFFER_SIZE] = {0};
-  nullnet_buf = buf;
-  #if DEBUG
-  LOG_INFO("Sending to receiver mote\n");
-  #endif
-  for (i = 0; i < CEIL_DIVIDE(BLOCK_LEN,TX_BUFFER_SIZE); i++) {
-    memset(buf, 0, TX_BUFFER_SIZE);
-    memcpy(buf, signal_bytes + (i * TX_BUFFER_SIZE), i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE);
-    nullnet_len = i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE;
-    NETSTACK_NETWORK.output(NULL);
-  }
-}
-
-PROCESS(comp_sensing, "compressed");
-AUTOSTART_PROCESSES(&comp_sensing);
-
-PROCESS_THREAD(comp_sensing, ev, data)
-{
-
-    /* Declare variables required */
 static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951, 954, 951, 951, 952,
   957, 959, 961, 962, 963, 962, 958, 955, 956, 954, 951, 952, 948, 945,
   946, 947, 945, 943, 940, 939, 936, 936, 933, 933, 933, 935, 939, 939,
@@ -72,8 +47,32 @@ static int16_t signal[N_CS] = {  0, 948, 948, 948, 948, 948, 948, 948, 951, 951,
   942, 941, 941, 942, 943, 943, 946, 947, 949, 952, 952, 950, 949, 949,
   948, 947, 948, 950, 951, 953, 952, 952 };
 
+static uint8_t signal_bytes[BLOCK_LEN] = {0};
+static uint16_t i = 0;
+// static linkaddr_t receiver = {{0x30, 0xa3, 0x45, 0x1a, 0x00, 0x74, 0x12, 0x00}};
+
+static void send_packets() {
+  static uint8_t buf[TX_BUFFER_SIZE] = {0};
+  nullnet_buf = buf;
+  #if DEBUG
+  LOG_INFO("Sending to receiver mote\n");
+  #endif
+  for (i = 0; i < CEIL_DIVIDE(BLOCK_LEN,TX_BUFFER_SIZE); i++) {
+    memset(buf, 0, TX_BUFFER_SIZE);
+    memcpy(buf, signal_bytes + (i * TX_BUFFER_SIZE), i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE);
+    nullnet_len = i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE;
+    NETSTACK_NETWORK.output(NULL);
+  }
+}
+
+PROCESS(comp_sensing, "compressed");
+AUTOSTART_PROCESSES(&comp_sensing);
+
+PROCESS_THREAD(comp_sensing, ev, data)
+{
     PROCESS_BEGIN();
-    /* Turn radio off */
+
+    // Turn radio off while processing data 
     NETSTACK_RADIO.off();
 
     #if DEBUG
