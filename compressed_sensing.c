@@ -95,7 +95,7 @@ PROCESS_THREAD(comp_sensing, ev, data)
         for (i = 0; i < N_CS; i++) {
           signal[i] >>= 1;
         }
-        ec_transform(signal);
+        ec_transform_structured(signal);
         #if DEBUG
         LOG_INFO_("Transformed data:\n");
         for (i = 0; i < M; i++) {
