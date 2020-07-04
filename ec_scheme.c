@@ -42,7 +42,6 @@ void multiply_sensing_matrix(int16_t *signal)
     int16_t result[M] = { 0 };
 
     for (m = 0; m < M; m++) {
-        result[m] = 0;
         for (n = 0; n < N_CS; n++) {
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
             if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
