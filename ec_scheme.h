@@ -67,5 +67,6 @@
 #define BETA_BITS 8
 
 void ec_transform(int16_t* signal);
+void ec_transform_structured(int16_t* signal);
 
 #endif /* EC_H_ */

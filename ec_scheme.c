@@ -36,6 +36,33 @@ void multiply_sensing_matrix(int16_t *signal)
     // LFSR stuff
     uint16_t bit16;
     uint8_t bit8;
+    uint8_t output[L] = { 0 };
+
+    uint16_t m, n;
+    int16_t result[M] = { 0 };
+
+    for (m = 0; m < M; m++) {
+        result[m] = 0;
+        for (n = 0; n < N_CS; n++) {
+            DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
+            if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
+                result[m] += signal[n];
+            } else {
+                result[m] -= signal[n];
+            }
+        }
+    }
+
+    /* Copy result into signal */
+    memset(signal, 0, N_CS * sizeof(int16_t));
+    memcpy(signal, result, M * sizeof(int16_t));
+}
+
+void multiply_structured_sensing_matrix(int16_t *signal)
+{
+    // LFSR stuff
+    uint16_t bit16;
+    uint8_t bit8;
     uint8_t a;
     uint8_t output[L] = { 0 };
     int8_t basis[N_CS] = { 0 };
@@ -109,4 +136,10 @@ void ec_transform(int16_t *signal)
 {
     signal[0] = generate_ec_variable(signal);
     multiply_sensing_matrix(signal);
+}
+
+void ec_transform_structured(int16_t *signal)
+{
+    signal[0] = generate_ec_variable(signal);
+    multiply_structured_sensing_matrix(signal);
 }
