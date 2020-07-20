@@ -25,7 +25,7 @@ int16_t generate_ec_variable(int16_t *signal)
 
     c = EMAX - c;
     
-    c_16 = fp_sqrt(c, 10) >> 8;
+    c_16 = fp_sqrt(c, 10) >> FPART;
 
     return c_16;
 }

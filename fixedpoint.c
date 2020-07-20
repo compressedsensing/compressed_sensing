@@ -20,10 +20,14 @@ int16_t fp_multiply(int16_t a, int16_t b)
 
 int32_t fp_multiply32(int32_t a, int32_t b)
 {
-    int32_t result;
-    result = (((int64_t)a * (int64_t)b) + (1 << (16 - 1))) >> 16;
+    int64_t result;
+    int32_t out;
+    result = (int64_t)a * (int64_t)b;
+    result += 1L << (FPART_32 - 1);
+    result = result >> FPART_32;
+    out = result;
 
-    return result;
+    return out;
 }
 /**
  * @brief Division of FP numbers
@@ -35,7 +39,7 @@ int32_t fp_division32(int32_t a, int32_t b)
 {
     int64_t result = 0;
 
-    result = (((int64_t)a << 16) + (b >> 1)) / b;
+    result = (((int64_t)a << FPART_32) + (b >> 1)) / b;
     return (int32_t)result;
 }
 
