@@ -118,6 +118,9 @@ void multiply_structured_sensing_matrix(int16_t *signal)
         }
     }
 
+    // Reset alpha map values for next time
+    memset(alphas, 0, N_CS * sizeof(uint8_t));
+
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));
     memcpy(signal, result, M * sizeof(int16_t));
