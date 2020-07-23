@@ -64,6 +64,7 @@ static void send_packets() {
     nullnet_len = i == (BLOCK_LEN / TX_BUFFER_SIZE) ? BLOCK_LEN % TX_BUFFER_SIZE : TX_BUFFER_SIZE;
     NETSTACK_NETWORK.output(NULL);
   }
+  NETSTACK_RADIO.off();
 }
 
 PROCESS(comp_sensing, "compressed");
@@ -108,10 +109,7 @@ PROCESS_THREAD(comp_sensing, ev, data)
     #endif
 
     NETSTACK_RADIO.on();
-    send_packets();
-    // First turn radio off when done with transmission
-    PROCESS_YIELD();
-    NETSTACK_RADIO.off();
+    send_packets();    
 
     PROCESS_END();
 }
