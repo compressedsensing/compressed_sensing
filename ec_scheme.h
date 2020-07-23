@@ -62,8 +62,8 @@
             nfsr = (nfsr >> 1) | (bit8 << 7);                                                                               \
 })                                                                                                                          \
 
-// #define ALPHA_MAX ILOG2(N_CS-1)
-#define ALPHA_MAX 8
+#define ALPHA_MAX ILOG2(N_CS-1)
+// #define ALPHA_MAX 8
 #define BETA_BITS 8
 
 void ec_transform(int16_t* signal);
