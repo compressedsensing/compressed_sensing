@@ -56,6 +56,8 @@ void multiply_sensing_matrix(int16_t *signal)
     memcpy(signal, result, M * sizeof(int16_t));
 }
 
+uint8_t alphas[N_PRIME] = { 0 }; // If index is set to one alpha value is used
+
 void multiply_structured_sensing_matrix(int16_t *signal)
 {
     // LFSR stuff
@@ -63,67 +65,67 @@ void multiply_structured_sensing_matrix(int16_t *signal)
     uint8_t bit8;
     uint8_t a;
     uint8_t output[L] = { 0 };
-    int8_t basis[N_CS] = { 0 };
+    int8_t basis[N_PRIME] = { 0 };
 
     int16_t m,n = 0;
-    int16_t modIndex;
-    int16_t alpha = 0;
+    uint16_t alpha = 0;
     int16_t result[M] = { 0 };
 
     // Generate first row and base random matrix on that
-    for (n = 0; n < N_CS; n++) {
+    for (n = 0; n < N_PRIME; n++) {
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
             if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
                 basis[n] = 1;
                 result[0] += signal[n];
+                result[M_PRIME] += signal[n + N_PRIME];
             } else {
                 basis[n] = 0;
                 result[0] -= signal[n];
+                result[M_PRIME] -= signal[n + N_PRIME];
             }
     }
 
-    for (m = 1; m < M; m++) {
+    for (m = 1; m < M_PRIME; m++) {
         watchdog_periodic();
         // Draw random alpha uniformly from the RNG
         alpha = 0;
-        for (a = 0; a < (ALPHA_MAX - 1); a++) {
+        for (a = 0; a < ALPHA_MAX; a++) {
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
 
             alpha <<= 1;
             alpha |= (output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]);
         }
 
-        // Handle last bit by or'ing 1 to make sure alpha is odd
-        alpha <<= 1;
-        alpha |= 1;
+        // Make sure alpha is unique
+        while (alphas[alpha]) {
+            alpha += 1 % N_PRIME;
+        }
+        alphas[alpha] = 1;
 
         for (n = 0; n < BETA_BITS; n++) {
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
-
-            modIndex = ((n - m) * alpha) % N_CS;
-            if(modIndex < 0) {
-                modIndex += N_CS;
-            }
-
             // Flip first BETA_BITS depending on random number, to preserve DC
-            if (basis[modIndex] ^ ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]))) {
+            if (basis[(n + alpha) % N_PRIME] ^ ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]))) {
                 result[m] -= signal[n];
+                result[m + M_PRIME] -= signal[n + N_PRIME];
             } else {
                 result[m] += signal[n];
+                result[m + M_PRIME] += signal[n + N_PRIME];
             }
         }
-        for (n = BETA_BITS; n < N_CS; n++) {
-            modIndex = ((n - m) * alpha) % N_CS;
-            if(modIndex < 0) {
-                modIndex += N_CS;
-            }
-            if (basis[modIndex]) {
+        for (n = BETA_BITS; n < N_PRIME; n++) {
+            if (basis[(n + alpha) % N_PRIME]) {
                 result[m] += signal[n];
+                result[m + M_PRIME] += signal[n + N_PRIME];
             } else {
                 result[m] -= signal[n];
+                result[m + M_PRIME] -= signal[n + N_PRIME];
             }
         }
     }
+
+    // Reset alpha map values for next time
+    memset(alphas, 0, N_PRIME * sizeof(uint8_t));
 
     /* Copy result into signal */
     memset(signal, 0, N_CS * sizeof(int16_t));
