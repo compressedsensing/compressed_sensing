@@ -6,7 +6,11 @@
 #define N_PRIME 256 // N should be greater than or equal 256
 #define M 360
 #define M_PRIME (M/(N_CS/N_PRIME))
-#define EMAX 0x13000000 /* */
+// #define EMAX 0x13000000 /* */
+#define EMAX 0x79365106 // EMAX Q.8.24 for N=1024
+// #define EMAX 0x3931DA80// EMAX Q.8.24 for N=768
+// #define EMAX 0x2DF2B440 // EMAX Q.8.24 for N=512
+// #define EMAX 0x1BF499C0 // EMAX Q.8.24 for N=256
 #ifndef LOG_MODULE
 #define LOG_MODULE "compressed_sensing"
 #define LOG_LEVEL LOG_LEVEL_INFO
