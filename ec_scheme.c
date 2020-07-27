@@ -67,7 +67,7 @@ void multiply_structured_sensing_matrix(int16_t *signal)
     uint8_t output[L] = { 0 };
     int8_t basis[N_PRIME] = { 0 };
 
-    int16_t m,n = 0;
+    int16_t m,n = 0, i = 0;
     uint16_t alpha = 0;
     int16_t result[M] = { 0 };
 
@@ -76,12 +76,14 @@ void multiply_structured_sensing_matrix(int16_t *signal)
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
             if ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2])) {
                 basis[n] = 1;
-                result[0] += signal[n];
-                result[M_PRIME] += signal[n + N_PRIME];
+                for (i = 0; i < (N_CS / N_PRIME); i++) {
+                    result[i*M_PRIME] += signal[n + i*N_PRIME];
+                }
             } else {
                 basis[n] = 0;
-                result[0] -= signal[n];
-                result[M_PRIME] -= signal[n + N_PRIME];
+                for (i = 0; i < (N_CS / N_PRIME); i++) {
+                    result[i*M_PRIME] -= signal[n + i*N_PRIME];
+                }
             }
     }
 
@@ -106,20 +108,24 @@ void multiply_structured_sensing_matrix(int16_t *signal)
             DRAW_RANDOM_BITS(output,lfsr,nfsr,bit16,bit8);
             // Flip first BETA_BITS depending on random number, to preserve DC
             if (basis[(n + alpha) % N_PRIME] ^ ((output[0] && output[1]) || (output[0] && output[2]) || (output[1] && output[2]))) {
-                result[m] -= signal[n];
-                result[m + M_PRIME] -= signal[n + N_PRIME];
+                for (i = 0; i < (N_CS / N_PRIME); i++) {
+                    result[m + i*M_PRIME] -= signal[n + i*N_PRIME];
+                }
             } else {
-                result[m] += signal[n];
-                result[m + M_PRIME] += signal[n + N_PRIME];
+                for (i = 0; i < (N_CS / N_PRIME); i++) {
+                    result[m + i*M_PRIME] += signal[n + i*N_PRIME];
+                }
             }
         }
         for (n = BETA_BITS; n < N_PRIME; n++) {
             if (basis[(n + alpha) % N_PRIME]) {
-                result[m] += signal[n];
-                result[m + M_PRIME] += signal[n + N_PRIME];
+                for (i = 0; i < (N_CS / N_PRIME); i++) {
+                    result[m + i*M_PRIME] += signal[n + i*N_PRIME];
+                }
             } else {
-                result[m] -= signal[n];
-                result[m + M_PRIME] -= signal[n + N_PRIME];
+                for (i = 0; i < (N_CS / N_PRIME); i++) {
+                    result[m + i*M_PRIME] -= signal[n + i*N_PRIME];
+                }
             }
         }
     }
