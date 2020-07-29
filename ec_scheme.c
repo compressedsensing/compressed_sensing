@@ -30,6 +30,29 @@ int16_t generate_ec_variable(int16_t *signal)
     return c_16;
 }
 
+/**
+ * @brief Does compressed sensing with a energy concealment scheme. 
+ * @param signal The signal to compress. Should be length N-1
+ * @param result The result vector. Should be length M
+ * @param length The length of the signal, with the c variable.
+ */
+
+int16_t generate_blockwise_ec_variable(int16_t *signal)
+{
+    int16_t i, c_16;
+    int32_t c = 0;
+
+    for (i = 1; i < N_PRIME; i++) {
+        c += ((int32_t) signal[i] * signal[i]);
+    }
+
+    c = EMAX - c;
+    
+    c_16 = fp_sqrt(c, 10) >> FPART;
+
+    return c_16;
+}
+
 void multiply_sensing_matrix(int16_t *signal)
 {
     // LFSR stuff
@@ -58,7 +81,7 @@ void multiply_sensing_matrix(int16_t *signal)
 
 uint8_t alphas[N_PRIME] = { 0 }; // If index is set to one alpha value is used
 
-void multiply_structured_sensing_matrix(int16_t *signal)
+void multiply_blockwise_sensing_matrix(int16_t *signal)
 {
     // LFSR stuff
     uint16_t bit16;
@@ -144,8 +167,28 @@ void ec_transform(int16_t *signal)
     multiply_sensing_matrix(signal);
 }
 
-void ec_transform_structured(int16_t *signal)
+void ec_transform_blockwise(int16_t *signal)
 {
-    signal[0] = generate_ec_variable(signal);
-    multiply_structured_sensing_matrix(signal);
+    // Genereate EC variables
+    uint16_t i = 0, j = 0;
+    signal[0] = generate_blockwise_ec_variable(signal);
+    #if N_CS > 256
+    // Swap all elements to the right with the amount of EC variables we need -1, discard the last elements
+    for (j = (N_CS - 1); j > (N_CS-N_PRIME); j--) {
+        signal[j] = signal[j - ((N_CS/N_PRIME) - 1)]; 
+    }
+    signal[N_CS-N_PRIME] = generate_blockwise_ec_variable(signal + N_CS-N_PRIME);
+
+    i = 1;
+    while (i < ((N_CS/N_PRIME) - 1)) {
+        for (j = (N_CS - 1) - (i*N_PRIME); j > (N_CS-((i+1)*N_PRIME) - 1); j--) {
+            signal[j] = signal[j - ((N_CS/N_PRIME) - 1 - i)]; 
+        }
+        signal[N_CS-((i+1)*N_PRIME)] = generate_blockwise_ec_variable(signal + N_CS-(((N_CS/N_PRIME) - 1 - i)*N_PRIME));
+        i++;
+    }    
+    #endif
+
+    
+    multiply_blockwise_sensing_matrix(signal);
 }

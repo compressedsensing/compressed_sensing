@@ -2,9 +2,9 @@
 #define CS_CONF_H_
 
 #define BLOCK_LEN M*2
-#define N_CS 1024
+#define N_CS 512
 #define N_PRIME 256 // N should be greater than or equal 256
-#define M 360
+#define M 256
 #define M_PRIME (M/(N_CS/N_PRIME))
 // #define EMAX 0x13000000 /* */
 #define EMAX 0x79365106 // EMAX Q.8.24 for N=1024
