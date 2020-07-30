@@ -77,14 +77,27 @@ In the middle a Contiki NG process is. This is the actual action of the test. Th
 
 It should be noted that the transmission can be done either with a delay between packets or just sequentially. It is observed for the TelosB that with more than three packets the packets will not be transmitted correctly doing just sequentially transmission, thus the **SEND_PACKETS_WITH_DELAY** flag should be **1**. This will add the minimum delay between packets to be able to transmit the correctly, thus keeping the energy consumption penalty as low as possible. You might have to increase the etimer_set function call delay to **CLOCK_SECOND/11** from **CLOCK_SECOND/10** for some block sizes, depending on how much you transmit.
 
+### Verification and testing
+To be able to verify the schemes a signal reconstruction script has been made in a python notebook located in colab. In the following folder [https://drive.google.com/drive/folders/1vnTTLqZaBvs1BCDa4sogXyUq3D5xcy4m?usp=sharing](https://drive.google.com/drive/folders/1vnTTLqZaBvs1BCDa4sogXyUq3D5xcy4m?usp=sharing) lies both a reconstruction folder and a test signals folder. The reconstruction folder contains scripts to reconstruct a compressed signal (both blockwise and the basic scheme) from its hex format. This is the one outputtet from the the test program (compressed_sensing_end_to_end.c) in DEBUG state 1. A compare signal should be provided aswell to be able to see how well the signal was reconstructed and to calculate a PRD.
+
+To be able test the schemes a test signal should be provided in 16-bit format. In the folder mentioned above there is also a folder called **Test signals**. There lies a script called **Mote_test_data_generator** generating a test signal in different block sizes based on a record in the ECG database. This signal can be copied into the test program (just replace the constant value SIGNAL_LEN with the value N_CS). This signal can also be copied in as the compare signal for the reconstruction script mentioned above.
 
 ### Testing the schemes
 As mentioned the file **compressed_sensing_end_to_end.c** is written as a test program. This program can in debug state measure the amount of clock cycles used for processing (compressing and encrypting) the signal. It also outputs the processed signal in the terminal for verification purposes.
 
 When measuring the energy consumption. The following setup can be applied:
 
-<object data="./figures/measurement_curcuit.pdf" type="application/pdf" width="200px" height="200px">
-    <embed src="./figures/measurement_curcuit.pdf">
-        <p>This browser does not support PDFs. Please download the PDF to view it: <a href="./figures/measurement_curcuit.pdf">Download PDF</a>.</p>
-    </embed>
-</object>
+![Image of the circuit setup to measure the energy during one test](./figures/measurement_curcuit-1.jpg?raw=true "Circuit setup")
+
+A signal should be picked for testing. This can be generated from the **Mote_test_data_generator** script choosing the record of your choice. In the desired block size **N_CS** The signal definition should be copied into the **compressed_sensing_end_to_end.c** file.
+
+The proper **N_CS** and **M** values used should be configured in **cs_config.h**. The **N_CS** value should fit the signal length, and the **M** value should fit the desired compression ratio.
+
+Configure **DEBUG** to **0** and **LOG_LEVEL** should be set to **LOG_LEVEL_NONE** in **cs_config.h**.
+
+Program the mote and start it/restart it. The output of the oscilloscope should look similar to this (of course with variations on the time axis):
+
+![Image of an example measurement](./figures/measurement_example.jpg?raw=true "Energy measurement example").
+
+The beginning spike is part of the booting process of the mote and will be constant no matter the scheme and signal. Measure the voltage from just after "boot-spike".
+The flat area which follow is the processing of the signal, and the last spikes are the transmitting of the processed signal. Measure the voltage from just after the booting spike to just after the transmission is done. Use this to calculate the energy consumption.
