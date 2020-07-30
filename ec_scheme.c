@@ -169,17 +169,10 @@ void ec_transform(int16_t *signal)
 
 void ec_transform_blockwise(int16_t *signal)
 {
-    // Genereate EC variables
-    uint16_t i = 0, j = 0;
+    // Genereate EC variables, and insert into right places in the signal
     signal[0] = generate_blockwise_ec_variable(signal);
-    #if N_CS > 256
-    // Swap all elements to the right with the amount of EC variables we need -1, discard the last elements
-    for (j = (N_CS - 1); j > (N_CS-N_PRIME); j--) {
-        signal[j] = signal[j - ((N_CS/N_PRIME) - 1)]; 
-    }
-    signal[N_CS-N_PRIME] = generate_blockwise_ec_variable(signal + N_CS-N_PRIME);
-
-    i = 1;
+    #if N_CS > N_PRIME
+    uint16_t i = 0, j = 0;
     while (i < ((N_CS/N_PRIME) - 1)) {
         for (j = (N_CS - 1) - (i*N_PRIME); j > (N_CS-((i+1)*N_PRIME) - 1); j--) {
             signal[j] = signal[j - ((N_CS/N_PRIME) - 1 - i)]; 
@@ -188,7 +181,6 @@ void ec_transform_blockwise(int16_t *signal)
         i++;
     }    
     #endif
-
     
     multiply_blockwise_sensing_matrix(signal);
 }
