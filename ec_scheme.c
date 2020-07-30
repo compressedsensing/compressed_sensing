@@ -23,10 +23,10 @@ int16_t generate_ec_variable(int16_t *signal)
         c += (int32_t) signal[i] * signal[i];
     }
 
+    c >>= 8;
     c = EMAX - c;
-    
-    c_16 = fp_sqrt(c, 10) >> FPART;
-
+    c_16 = fp_sqrt(c, 10) >> 4;
+   
     return c_16;
 }
 
@@ -43,13 +43,13 @@ int16_t generate_blockwise_ec_variable(int16_t *signal)
     int32_t c = 0;
 
     for (i = 1; i < N_PRIME; i++) {
-        c += ((int32_t) signal[i] * signal[i]);
+        c += (int32_t) signal[i] * signal[i];
     }
 
+    c >>= 8;
     c = EMAX - c;
-    
-    c_16 = fp_sqrt(c, 10) >> FPART;
-
+    c_16 = fp_sqrt(c, 10) >> 4;
+   
     return c_16;
 }
 
